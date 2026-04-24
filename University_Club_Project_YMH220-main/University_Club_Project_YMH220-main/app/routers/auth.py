@@ -21,15 +21,15 @@ def register(user_in: UserCreate, db: Session = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 def login_for_access_token(
-    login_data: LoginRequest,
+    form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(get_db)
 ):
     """
     Login endpoint to get a JWT access token.
-    Accepts JSON body for frontend authentication.
+    Accepts form data for Swagger UI authentication.
     """
     auth_service = AuthService(db)
-    user = auth_service.authenticate_user(email=login_data.email, password=login_data.password)
+    user = auth_service.authenticate_user(email=form_data.username, password=form_data.password)
     
     if not user:
         raise HTTPException(
