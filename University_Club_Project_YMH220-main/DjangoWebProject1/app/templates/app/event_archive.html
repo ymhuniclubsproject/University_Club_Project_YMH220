@@ -1,0 +1,78 @@
+{% extends "app/layout.html" %}
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="font-weight-bold">Event Archive & Ratings</h3>
+        <a href="{% url 'event_add' %}" class="btn btn-maroon shadow-sm">
+            <i class="fas fa-plus mr-2"></i>Add Event
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-6">
+            <h5 class="font-weight-bold mb-3 text-maroon">Rate an Event</h5>
+            <div class="card border-0 shadow-sm rounded-lg overflow-hidden border-top-maroon mb-4">
+                <div class="card-header text-white font-weight-bold py-3" style="background-color:#800000;">
+                    Submit Your Rating
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold small text-muted">Event</label>
+                            {{ rating_form.event }}
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold small text-muted">Score</label>
+                            {{ rating_form.score }}
+                        </div>
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold small text-muted">Comment</label>
+                            {{ rating_form.comment }}
+                        </div>
+                        <button type="submit" class="btn btn-maroon btn-block py-2 font-weight-bold shadow-sm">
+                            <i class="fas fa-star mr-2"></i>Submit Rating
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 pl-md-5">
+            <h5 class="font-weight-bold mb-3 text-maroon">Past Events</h5>
+            {% for event in past_events %}
+            <div class="card border-0 shadow-sm rounded-lg overflow-hidden mb-4">
+                {% if event.image_url %}
+                <img src="{{ event.image_url }}" class="card-img-top" style="height:200px; object-fit:cover;">
+                {% endif %}
+                <div class="card-body">
+                    <h6 class="font-weight-bold mb-2 text-maroon">{{ event.title }}</h6>
+                    <p class="small text-muted">{{ event.club.name }} &middot; {{ event.event_date }}</p>
+                    {% if event.ratings.exists %}
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge badge-pill px-3 py-1 border border-danger" style="background:#fceceb; color:#800000;">
+                            {% with total=event.ratings.count %}
+                                {{ total }} rating{{ total|pluralize }}
+                            {% endwith %}
+                        </span>
+                        <span class="text-warning font-weight-bold h5 mb-0">
+                            &#9733;
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="alert alert-info">No past events yet.</div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+<style>
+    .text-maroon { color: #800000 !important; }
+    .border-top-maroon { border-top: 5px solid #800000 !important; }
+    .btn-maroon { background-color: #800000; color: white !important; border: none; }
+    .btn-maroon:hover { background-color: #600000 !important; }
+    .form-control:focus { border-color: #800000; box-shadow: 0 0 0 0.2rem rgba(128,0,0,0.15); }
+</style>
+{% endblock %}

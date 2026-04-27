@@ -1,0 +1,81 @@
+{% extends "app/layout.html" %}
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="font-weight-bold">Announcements & News</h2>
+        {% if user.username == 'UNICLUBSADMIN' %}
+        <a href="{% url 'announcement_add' %}" class="btn btn-maroon shadow-sm">
+            <i class="fas fa-plus mr-2"></i>New Announcement
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="row">
+        <div class="{% if user.username == 'UNICLUBSADMIN' %}col-md-9{% else %}col-md-12{% endif %}">
+            <div class="row">
+                {% for ann in announcements %}
+                <div class="col-xl-4 col-lg-4 col-md-6 mb-4">
+                    <div class="card border-0 shadow-sm h-100 rounded-lg overflow-hidden card-hover">
+                        <div class="bg-maroon d-flex align-items-center justify-content-center" style="height:120px;">
+                            <i class="fas fa-bullhorn fa-3x text-white" style="opacity:0.5;"></i>
+                        </div>
+                        <div class="card-body p-3">
+                            <span class="badge badge-pill mb-2 {% if ann.announcement_type == 'school' %}badge-danger{% elif ann.announcement_type == 'club' %}badge-info{% else %}badge-secondary{% endif %}">
+                                {{ ann.get_announcement_type_display }}
+                            </span>
+                            <h6 class="font-weight-bold mb-2 small">{{ ann.title }}</h6>
+                            <p class="extra-small text-muted mb-3" style="height:40px; overflow:hidden;">{{ ann.content|truncatewords:15 }}</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <a href="{% url 'announcement_detail' ann.pk %}" class="btn btn-maroon btn-sm py-1 font-weight-bold shadow-sm">Read More</a>
+                                {% if user.username == 'UNICLUBSADMIN' %}
+                                <div>
+                                    <a href="{% url 'announcement_edit' ann.pk %}" class="btn btn-sm btn-outline-primary px-2 py-1 mr-1" title="Edit"><i class="fas fa-edit"></i></a>
+                                    <a href="{% url 'announcement_delete' ann.pk %}" class="btn btn-sm btn-outline-danger px-2 py-1" title="Delete"><i class="fas fa-trash"></i></a>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="card-footer bg-white border-0 extra-small text-muted">
+                            <i class="far fa-clock mr-1"></i>{{ ann.published_at|date:"d M Y" }}
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <i class="fas fa-bullhorn fa-4x text-muted mb-3"></i>
+                    <p class="text-muted">No announcements listed for today.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        {% if user.username == 'UNICLUBSADMIN' %}
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm rounded-lg border-top-maroon">
+                <div class="card-body p-4">
+                    <h5 class="font-weight-bold mb-4 text-maroon border-bottom pb-2 text-uppercase small">Quick Actions</h5>
+                    <a href="{% url 'announcement_add' %}" class="btn btn-maroon btn-block mb-3 py-2 font-weight-bold shadow-sm">
+                        <i class="fas fa-plus mr-2"></i>New Announcement
+                    </a>
+                    <a href="{% url 'club_admin' %}" class="btn btn-outline-secondary btn-block mb-2 text-left small shadow-sm">
+                        <i class="fas fa-tasks mr-2 text-maroon"></i>Club Panel
+                    </a>
+                    <a href="{% url 'system_admin' %}" class="btn btn-outline-dark btn-block text-left small shadow-sm">
+                        <i class="fas fa-user-shield mr-2 text-maroon"></i>Admin Panel
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+<style>
+    .text-maroon { color: #800000 !important; }
+    .bg-maroon { background-color: #800000 !important; }
+    .border-top-maroon { border-top: 4px solid #800000 !important; }
+    .btn-maroon { background-color: #800000; color: white !important; border: none; }
+    .btn-maroon:hover { background-color: #600000 !important; }
+    .card-hover:hover { transform: translateY(-5px); transition: 0.3s; box-shadow: 0 8px 15px rgba(0,0,0,0.1) !important; }
+    .extra-small { font-size: 11px; }
+</style>
+{% endblock %}

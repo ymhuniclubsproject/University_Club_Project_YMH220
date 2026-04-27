@@ -1,0 +1,164 @@
+{% extends "app/layout.html" %}
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="row">
+        <!-- SIDEBAR -->
+        <div class="col-md-2 border-right pr-4">
+            <div class="text-center mb-4">
+                <div class="bg-dark rounded-circle mx-auto d-flex align-items-center justify-content-center text-white shadow" style="width:70px;height:70px;">
+                    <i class="fas fa-user-shield fa-2x"></i>
+                </div>
+                <h6 class="mt-2 font-weight-bold">System Administrator</h6>
+            </div>
+            <div class="list-group sidebar-menu border-0 small">
+                <a href="{% url 'system_admin' %}" class="list-group-item active-item">
+                    <i class="fas fa-desktop mr-2"></i>Overview
+                </a>
+                <a href="{% url 'student_add' %}" class="list-group-item text-dark border-bottom">
+                    <i class="fas fa-user-plus mr-2 text-success"></i>Add Student
+                </a>
+                <a href="{% url 'club_add' %}" class="list-group-item text-dark border-bottom">
+                    <i class="fas fa-check-circle mr-2 text-primary"></i>Add Club
+                </a>
+                <a href="{% url 'event_add' %}" class="list-group-item text-dark border-bottom">
+                    <i class="fas fa-calendar-check mr-2 text-warning"></i>Add Event
+                </a>
+                <a href="{% url 'announcement_add' %}" class="list-group-item text-dark border-bottom">
+                    <i class="fas fa-bullhorn mr-2 text-info"></i>New Announcement
+                </a>
+                <a href="{% url 'home' %}" class="list-group-item text-danger mt-4 font-weight-bold border-0">
+                    <i class="fas fa-power-off mr-2"></i>Exit
+                </a>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="col-md-10">
+            <h4 class="font-weight-bold mb-4">System Admin Panel - Overview</h4>
+
+            <!-- Stats -->
+            <div class="row mb-4 text-center">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm p-3 rounded-lg border-left-maroon">
+                        <small class="text-muted font-weight-bold text-uppercase">Clubs Pending Approval</small>
+                        <h2 class="text-maroon font-weight-bold mb-0">{{ pending_clubs|length }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm p-3 rounded-lg border-left-maroon">
+                        <small class="text-muted font-weight-bold text-uppercase">Events Pending Approval</small>
+                        <h2 class="text-maroon font-weight-bold mb-0">{{ pending_events|length }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm p-3 rounded-lg">
+                        <small class="text-muted">Total Members</small>
+                        <h2>{{ total_members }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm p-3 rounded-lg">
+                        <small class="text-muted">Total Clubs</small>
+                        <h2>{{ total_clubs }}</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Clubs -->
+            <div class="card border-0 shadow-sm rounded-lg overflow-hidden mb-4">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between">
+                    <h6 class="font-weight-bold mb-0 text-maroon"><i class="fas fa-university mr-2"></i>Clubs Awaiting Approval</h6>
+                    <a href="{% url 'club_add' %}" class="btn btn-sm btn-maroon">+ Add Club</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 small">
+                        <thead class="bg-light"><tr><th>NAME</th><th>CATEGORY</th><th>CREATED</th><th class="text-center">ACTIONS</th></tr></thead>
+                        <tbody>
+                            {% for club in pending_clubs %}
+                            <tr>
+                                <td class="font-weight-bold">{{ club.name }}</td>
+                                <td>{{ club.category }}</td>
+                                <td>{{ club.created_at|date:"d.m.Y" }}</td>
+                                <td class="text-center">
+                                    <a href="{% url 'club_approve' club.pk %}" class="btn btn-sm btn-success px-2 py-1 mr-1">Approve</a>
+                                    <a href="{% url 'club_edit' club.pk %}" class="btn btn-sm btn-outline-primary px-2 py-1 mr-1"><i class="fas fa-edit"></i></a>
+                                    <a href="{% url 'club_delete' club.pk %}" class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted py-3">No clubs awaiting approval.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pending Events -->
+            <div class="card border-0 shadow-sm rounded-lg overflow-hidden mb-4">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between">
+                    <h6 class="font-weight-bold mb-0 text-maroon"><i class="fas fa-calendar-alt mr-2"></i>Events Awaiting Approval</h6>
+                    <a href="{% url 'event_add' %}" class="btn btn-sm btn-maroon">+ Add Event</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 small">
+                        <thead class="bg-light"><tr><th>TITLE</th><th>CLUB</th><th>DATE</th><th class="text-center">ACTIONS</th></tr></thead>
+                        <tbody>
+                            {% for event in pending_events %}
+                            <tr>
+                                <td class="font-weight-bold">{{ event.title }}</td>
+                                <td>{{ event.club.name }}</td>
+                                <td>{{ event.event_date }}</td>
+                                <td class="text-center">
+                                    <a href="{% url 'event_approve' event.pk %}" class="btn btn-sm btn-success px-2 py-1 mr-1">Approve</a>
+                                    <a href="{% url 'event_edit' event.pk %}" class="btn btn-sm btn-outline-primary px-2 py-1 mr-1"><i class="fas fa-edit"></i></a>
+                                    <a href="{% url 'event_delete' event.pk %}" class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center text-muted py-3">No events awaiting approval.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- All Students -->
+            <div class="card border-0 shadow-sm rounded-lg overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between">
+                    <h6 class="font-weight-bold mb-0 text-maroon"><i class="fas fa-users mr-2"></i>All Students</h6>
+                    <a href="{% url 'student_add' %}" class="btn btn-sm btn-maroon">+ Add Student</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 small">
+                        <thead class="bg-light"><tr><th>NAME</th><th>STUDENT ID</th><th>DEPARTMENT</th><th>YEAR</th><th>EMAIL</th><th class="text-center">ACTIONS</th></tr></thead>
+                        <tbody>
+                            {% for student in all_students %}
+                            <tr>
+                                <td class="font-weight-bold">{{ student.full_name }}</td>
+                                <td>{{ student.student_id }}</td>
+                                <td>{{ student.department }}</td>
+                                <td>{{ student.year }}</td>
+                                <td>{{ student.email }}</td>
+                                <td class="text-center">
+                                    <a href="{% url 'student_edit' student.pk %}" class="btn btn-sm btn-outline-primary px-2 py-1 mr-1"><i class="fas fa-edit"></i></a>
+                                    <a href="{% url 'student_delete' student.pk %}" class="btn btn-sm btn-outline-danger px-2 py-1"><i class="fas fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center text-muted py-3">No students registered. <a href="{% url 'student_add' %}">Add first student</a>.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .text-maroon { color: #800000 !important; }
+    .border-left-maroon { border-left: 5px solid #800000 !important; }
+    .btn-maroon { background-color: #800000; color: white !important; border: none; border-radius: 6px; font-weight: bold; }
+    .btn-maroon:hover { background-color: #600000; }
+    .sidebar-menu .active-item { background-color: #fceceb !important; color: #800000 !important; border-left: 4px solid #800000 !important; font-weight: bold; }
+</style>
+{% endblock %}

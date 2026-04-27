@@ -1,0 +1,37 @@
+{% extends "app/layout.html" %}
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-lg rounded-lg overflow-hidden">
+                <div class="card-header bg-dark text-white p-4 text-center">
+                    <h3 class="font-weight-bold mb-0">CORE TEAM APPLICATION</h3>
+                    <p class="small mb-0 opacity-75">Apply to join the leadership of {{ club.name }}</p>
+                </div>
+                <div class="card-body p-5">
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="alert alert-info small mb-4">
+                            <i class="fas fa-info-circle mr-2"></i> Only choose one department. Your grade and faculty will be automatically linked from your student profile.
+                        </div>
+                        
+                        {% for field in form %}
+                        <div class="form-group mb-4">
+                            <label class="font-weight-bold text-muted small mb-1">{{ field.label }}</label>
+                            {{ field }}
+                            {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+
+                        <button type="submit" class="btn btn-dark btn-block py-3 font-weight-bold shadow">
+                            SUBMIT APPLICATION
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
