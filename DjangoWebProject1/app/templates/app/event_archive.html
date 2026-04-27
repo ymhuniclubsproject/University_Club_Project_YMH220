@@ -1,0 +1,73 @@
+{% extends "app/layout.html" %}
+{% block content %}
+<div class="container-fluid px-4">
+    <h3 class="font-weight-bold mb-4">Etkinlik Puanlama ve Geçmiş Etkinlik Arşivi</h3>
+
+    <div class="row">
+        <div class="col-md-6">
+            <h5 class="font-weight-bold mb-3 text-maroon">Puanlama Bekleyen Etkinlikler</h5>
+            <div class="card border-0 shadow-sm mb-4 rounded-lg overflow-hidden border-top-maroon">
+                <div class="card-header bg-maroon text-white font-weight-bold py-3" style="background-color: #800000;">
+                    Yapay Zeka Zirvesi 2025
+                </div>
+                <div class="card-body text-center">
+                    <p class="text-muted">Etkinliği nasıl buldunuz? Puanlamak için yıldızlara tıklayın.</p>
+                    <div class="rating-stars mb-4 h2">
+                        <span class="star-btn" data-value="1" style="cursor:pointer;"><i class="far fa-star text-warning"></i></span>
+                        <span class="star-btn" data-value="2" style="cursor:pointer;"><i class="far fa-star text-warning"></i></span>
+                        <span class="star-btn" data-value="3" style="cursor:pointer;"><i class="far fa-star text-warning"></i></span>
+                        <span class="star-btn" data-value="4" style="cursor:pointer;"><i class="far fa-star text-warning"></i></span>
+                        <span class="star-btn" data-value="5" style="cursor:pointer;"><i class="far fa-star text-warning"></i></span>
+                    </div>
+                    <textarea class="form-control bg-light border-0 mb-3 p-3" rows="3" placeholder="Yorumunuzu buraya yazabilirsiniz..."></textarea>
+                    <button class="btn btn-maroon btn-block py-2 font-weight-bold shadow-sm" style="background-color: #800000; color: white;">Puanı Gönder</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6 pl-md-5">
+            <h5 class="font-weight-bold mb-3 text-maroon">Geçmiş Etkinlik Arşivi</h5>
+            <div class="card border-0 shadow-sm rounded-lg overflow-hidden mb-4">
+                <img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600" class="card-img-top" style="height: 200px; object-fit: cover;">
+                <div class="card-body">
+                    <h6 class="font-weight-bold mb-2 text-maroon">Python Atölyesi - 2025</h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge badge-soft-maroon px-3 py-1 border border-danger">Yıldız Etkinlik ⭐</span>
+                        <span class="text-warning font-weight-bold h5 mb-0">4.9/5</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-lg border-top-maroon">
+                <div class="card-body">
+                    <h6 class="font-weight-bold mb-3">Ayın En Aktif Kulüpleri</h6>
+                    <ul class="list-group list-group-flush small">
+                        <li class="list-group-item d-flex justify-content-between px-0">BT Kulübü <span class="font-weight-bold">4.9</span></li>
+                        <li class="list-group-item d-flex justify-content-between px-0">Münazara Kulübü <span class="font-weight-bold">4.7</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .border-top-maroon {
+        border-top: 5px solid #800000 !important;
+    }
+
+    .text-maroon {
+        color: #800000 !important;
+    }
+
+    .badge-soft-maroon {
+        background-color: #fceceb;
+        color: #800000;
+        border-radius: 50px;
+    }
+
+    .btn-maroon:hover {
+        background-color: #600000 !important;
+    }
+</style>
+{% endblock %}

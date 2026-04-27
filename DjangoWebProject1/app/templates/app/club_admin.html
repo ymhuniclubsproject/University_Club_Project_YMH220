@@ -1,0 +1,132 @@
+{% extends "app/layout.html" %}
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="row">
+        <div class="col-md-2 border-right pr-4" style="min-height: 80vh;">
+            <div class="text-center mb-4">
+                <div class="bg-maroon rounded-circle mx-auto d-flex align-items-center justify-content-center text-white shadow" style="width: 65px; height: 65px; background-color: #800000;">
+                    <i class="fas fa-desktop fa-lg"></i>
+                </div>
+                <h6 class="mt-2 font-weight-bold">BT Kulübü - Yönetici Paneli</h6>
+                <span class="badge badge-pill badge-light border text-maroon small">Kulüp Başkanı</span>
+            </div>
+            <div class="list-group sidebar-menu border-0 small">
+                <a href="{% url 'club_admin' %}" class="list-group-item active" style="background-color: #fceceb !important; color: #800000 !important; border-left: 4px solid #800000 !important; font-weight: bold;">
+                    <i class="fas fa-home mr-2"></i> Genel Bakış
+                </a>
+                <a href="#" class="list-group-item text-dark border-bottom"><i class="fas fa-info-circle mr-2 text-muted"></i> Kulüp Bilgileri</a>
+                <a href="#" class="list-group-item text-dark border-bottom"><i class="fas fa-calendar-plus mr-2 text-muted"></i> Etkinlik Ekle</a>
+                <a href="#" class="list-group-item text-dark border-bottom"><i class="fas fa-users mr-2 text-muted"></i> Üye Talepleri (5)</a>
+                <a href="{% url 'messages' %}" class="list-group-item text-dark border-bottom"><i class="fas fa-envelope mr-2 text-muted"></i> Mesajlar</a>
+                <a href="#" class="list-group-item text-dark"><i class="fas fa-cog mr-2 text-muted"></i> Ayarlar</a>
+                <a href="{% url 'home' %}" class="list-group-item text-danger mt-4 font-weight-bold border-0"><i class="fas fa-sign-out-alt mr-2"></i> Çıkış</a>
+            </div>
+        </div>
+
+        <div class="col-md-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="font-weight-bold">Kulüp Yönetim Özeti</h4>
+                <button class="btn btn-maroon shadow-sm"><i class="fas fa-plus mr-2"></i>Yeni Etkinlik Oluştur</button>
+            </div>
+
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 text-center border-bottom-maroon">
+                        <small class="text-muted font-weight-bold uppercase">Toplam Üye</small>
+                        <h2 class="font-weight-bold text-maroon mb-0">124</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 text-center border-bottom-maroon">
+                        <small class="text-muted font-weight-bold uppercase">Aktif Etkinlikler</small>
+                        <h2 class="font-weight-bold text-maroon mb-0">2</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 text-center border-bottom-maroon">
+                        <small class="text-muted font-weight-bold uppercase">Bekleyen Talepler</small>
+                        <h2 class="font-weight-bold text-warning mb-0">5</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 text-center border-bottom-maroon">
+                        <small class="text-muted font-weight-bold uppercase">Ortalama Puan</small>
+                        <h2 class="font-weight-bold text-success mb-0">4.8</h2>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card border-0 shadow-sm rounded-lg overflow-hidden mb-4">
+                <div class="card-header bg-white py-3 border-bottom">
+                    <h6 class="font-weight-bold mb-0 text-maroon"><i class="fas fa-user-plus mr-2"></i>Bekleyen Üyelik Başvuruları</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 small">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>ÖĞRENCİ</th>
+                                <th>BÖLÜM</th>
+                                <th>TARİH</th>
+                                <th class="text-center">İŞLEMLER</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="font-weight-bold">Ahmet Yılmaz</td>
+                                <td>Bilgisayar Mühendisliği</td>
+                                <td>25.04.2026</td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-success px-3 py-1 mr-2">Onayla</button>
+                                    <button class="btn btn-sm btn-outline-danger px-3 py-1">Reddet</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="font-weight-bold">Zeynep Kaya</td>
+                                <td>Yazılım Mühendisliği</td>
+                                <td>24.04.2026</td>
+                                <td class="text-center">
+                                    <button class="btn btn-sm btn-success px-3 py-1 mr-2">Onayla</button>
+                                    <button class="btn btn-sm btn-outline-danger px-3 py-1">Reddet</button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-maroon {
+        color: #800000 !important;
+    }
+
+    .btn-maroon {
+        background-color: #800000;
+        color: white !important;
+        border-radius: 8px;
+        border: none;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+
+        .btn-maroon:hover {
+            background-color: #600000;
+            transform: translateY(-1px);
+        }
+
+    .border-bottom-maroon {
+        border-bottom: 4px solid #800000 !important;
+    }
+
+    .sidebar-menu .list-group-item {
+        transition: 0.2s;
+    }
+
+        .sidebar-menu .list-group-item:hover {
+            background-color: #f8f9fa;
+            padding-left: 25px;
+        }
+</style>
+{% endblock %}
