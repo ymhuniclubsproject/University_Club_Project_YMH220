@@ -40,32 +40,71 @@
                                     <p class="h4 font-weight-bold mb-0 text-maroon">{{ members.count }}</p>
                                 </div>
                                 <div class="col-md-6 text-right align-self-end">
-                                    {% if club.is_core_team_recruiting %}
-                                        <div class="mb-2">
-                                            <span class="badge badge-primary px-3 py-2 shadow-sm pulse-blue">
-                                                <i class="fas fa-star mr-1"></i> Special Core Team Recruiting
-                                            </span>
-                                        </div>
-                                        <a href="{% url 'core_team_apply' club.pk %}" class="btn btn-primary btn-lg px-5 py-3 font-weight-bold shadow-lg">
-                                            <i class="fas fa-briefcase mr-2"></i> Join Core Team
-                                        </a>
-                                    {% elif club.is_recruiting %}
-                                        <div class="mb-2">
-                                            <span class="badge badge-success px-3 py-2 shadow-sm pulse-animation">
-                                                <i class="fas fa-user-plus mr-1"></i> Recruitment Open
-                                            </span>
-                                        </div>
-                                        <a href="{% url 'membership_apply' %}" class="btn btn-success btn-lg px-5 py-3 font-weight-bold shadow-lg">
-                                            <i class="fas fa-plus-circle mr-2"></i> Join This Club Now
-                                        </a>
-                                    {% else %}
-                                        <a href="{% url 'membership_apply' %}" class="btn btn-maroon px-4 py-2 font-weight-bold shadow-sm">
-                                            <i class="fas fa-plus mr-2"></i>Apply for Membership
-                                        </a>
+                                    {% if user.is_authenticated and user.username != 'UNICLUBSADMIN' and not user.managed_club %}
+                                        {% if club.is_core_team_recruiting %}
+                                            <div class="mb-2">
+                                                <span class="badge badge-primary px-3 py-2 shadow-sm pulse-blue">
+                                                    <i class="fas fa-star mr-1"></i> Special Core Team Recruiting
+                                                </span>
+                                            </div>
+                                            <a href="{% url 'core_team_apply' club.pk %}" class="btn btn-primary btn-lg px-5 py-3 font-weight-bold shadow-lg">
+                                                <i class="fas fa-briefcase mr-2"></i> Join Core Team
+                                            </a>
+                                        {% elif club.is_recruiting %}
+                                            <div class="mb-2">
+                                                <span class="badge badge-success px-3 py-2 shadow-sm pulse-animation">
+                                                    <i class="fas fa-user-plus mr-1"></i> Recruitment Open
+                                                </span>
+                                            </div>
+                                            <a href="{% url 'membership_apply' club.pk %}" class="btn btn-success btn-lg px-5 py-3 font-weight-bold shadow-lg">
+                                                <i class="fas fa-plus-circle mr-2"></i> Join This Club Now
+                                            </a>
+                                        {% else %}
+                                            <a href="{% url 'membership_apply' club.pk %}" class="btn btn-maroon px-4 py-2 font-weight-bold shadow-sm">
+                                                <i class="fas fa-plus mr-2"></i>Apply for Membership
+                                            </a>
+                                        {% endif %}
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Core Team Section -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-0 shadow-lg rounded-xl overflow-hidden" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);">
+                <div class="card-header bg-white border-0 pt-4 px-4 pb-0">
+                    <h4 class="font-weight-bold text-maroon mb-0">
+                        <i class="fas fa-crown mr-2"></i>Core Team (Leadership)
+                    </h4>
+                    <p class="text-muted small">The dedicated students leading this club</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row">
+                        {% for leader in core_team %}
+                        <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                            <div class="core-team-card h-100 p-3 text-center bg-white shadow-sm border-0 rounded-lg transition-3d">
+                                <div class="avatar-circle mx-auto mb-3 shadow-sm bg-maroon-light text-maroon">
+                                    <i class="fas fa-user-shield fa-2x"></i>
+                                </div>
+                                <h6 class="font-weight-bold mb-1">{{ leader.student.full_name }}</h6>
+                                <span class="badge badge-pill badge-primary mb-2 px-3">{{ leader.department }}</span>
+                                <p class="text-muted small mb-0">{{ leader.student.faculty }}</p>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12 text-center py-4">
+                            <div class="text-muted">
+                                <i class="fas fa-users-slash fa-3x mb-3 opacity-2"></i>
+                                <p>No core team members registered yet.</p>
+                            </div>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
@@ -116,6 +155,18 @@
                         <div class="card-body">
                             <h5 class="card-title font-weight-bold small mb-2">{{ event.title }}</h5>
                             <p class="card-text text-muted small mb-3">{{ event.description|truncatewords:15 }}</p>
+                            <div class="mb-2">
+                                <div class="text-warning small">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= event.average_rating %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <span class="text-muted ml-1">({{ event.average_rating }})</span>
+                                </div>
+                            </div>
                             <div class="d-flex justify-content-between align-items-center">
                                 <span class="badge {% if event.status == 'upcoming' %}badge-success{% else %}badge-secondary{% endif %} small">
                                     {{ event.get_status_display }}
@@ -186,5 +237,11 @@
         70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
         100% { transform: scale(0.95); box-shadow: 0 0 0 10px rgba(40, 167, 69, 0); }
     }
+    .rounded-xl { border-radius: 15px !important; }
+    .bg-maroon-light { background-color: #fceceb; }
+    .avatar-circle { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+    .transition-3d { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+    .transition-3d:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+    .opacity-2 { opacity: 0.2; }
 </style>
 {% endblock %}

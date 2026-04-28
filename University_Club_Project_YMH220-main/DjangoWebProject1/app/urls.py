@@ -13,6 +13,7 @@ urlpatterns = [
 
     # Student Dashboard
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('profile/edit/', views.profile_edit, name='profile_edit'),
 
     # Club Admin Panel
     path('club-admin/', views.club_admin, name='club_admin'),
@@ -51,7 +52,7 @@ urlpatterns = [
 
     # Membership Requests
     path('membership/', views.membership_requests_view, name='membership_requests'),
-    path('membership/apply/', views.membership_apply, name='membership_apply'),
+    path('membership/apply/<int:club_id>/', views.membership_apply, name='membership_apply'),
     path('membership/<int:pk>/approve/', views.membership_approve, name='membership_approve'),
     path('membership/<int:pk>/reject/', views.membership_reject, name='membership_reject'),
 
@@ -69,4 +70,5 @@ urlpatterns = [
     path('clubs/<int:pk>/core-team/apply/', views.core_team_apply, name='core_team_apply'),
     path('core-team/<int:pk>/approve/', views.core_team_approve, name='core_team_approve'),
     path('core-team/<int:pk>/reject/', views.core_team_reject, name='core_team_reject'),
+    path('membership/<int:pk>/remove/', views.member_remove, name='member_remove'),
 ]

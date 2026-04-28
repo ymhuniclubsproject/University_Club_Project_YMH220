@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UNICLUBS PORTAL</title>
+    <title>UNICLUBS</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -116,7 +116,7 @@
         <div class="container-fluid p-0">
             <a class="navbar-brand text-white font-weight-bold d-flex align-items-center ml-3" href="{% url 'home' %}">
                 <img src="{% static 'app/content/fu_logo_final_v4.png' %}" alt="FU Logo" style="height: 48px; width: auto; margin-right: 12px;">
-                UNICLUBS PORTAL
+                UNICLUBS
             </a>
             <button class="navbar-toggler text-white border-0" type="button" data-toggle="collapse" data-target="#navbarNav">
                 <i class="fas fa-bars"></i>
@@ -130,18 +130,22 @@
                 </ul>
                 <ul class="navbar-nav ml-auto align-items-center">
                     {% if user.is_authenticated %}
-                        {% if user.username == 'UNICLUBSADMIN' %}
+                        {% if user.username == 'UNICLUBSADMIN' or user.managed_club %}
                             <li class="nav-item">
                                 <a class="nav-link nav-club-admin" href="{% url 'club_admin' %}">
                                     <i class="fas fa-tasks mr-1"></i> Club Management
                                 </a>
                             </li>
+                        {% endif %}
+                        
+                        {% if user.username == 'UNICLUBSADMIN' %}
                             <li class="nav-item">
                                 <a class="nav-link nav-system-admin" href="{% url 'system_admin' %}">
                                     <i class="fas fa-user-shield mr-1"></i> SYSTEM ADMIN
                                 </a>
                             </li>
                         {% endif %}
+
                         <li class="nav-item d-flex align-items-center">
                             <span class="text-white small">Hello,</span>
                         </li>
@@ -153,7 +157,7 @@
                         </li>
                     {% else %}
                         <li class="nav-item">
-                            <a class="nav-link font-weight-bold" href="{% url 'login' %}">Login</a>
+                            <a class="nav-link btn-login" href="{% url 'login' %}">Login</a>
                         </li>
                     {% endif %}
                 </ul>

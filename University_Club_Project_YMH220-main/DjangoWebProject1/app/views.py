@@ -12,8 +12,60 @@ from .models import (
 from .forms import (
     ClubForm, StudentForm, EventForm, MembershipRequestForm,
     EventRegistrationForm, EventRatingForm, AnnouncementForm, MessageForm,
-    UserRegistrationForm, LoginForm, CoreTeamApplicationForm
+    UserRegistrationForm, LoginForm, CoreTeamApplicationForm, ProfileEditForm
 )
+
+
+def update_student_profile(user, data):
+    """Helper to sync student profile with form data"""
+    from .models import Student
+    
+    # Capture department from either 'department' or 'department_name'
+    dept = data.get('department') or data.get('department_name')
+    new_email = data.get('email')
+    
+    # 1. Try to find student by ID
+    student = Student.objects.filter(student_id=str(user.id)).first()
+    
+    # 2. If not found by ID, try to find by the NEW email provided in the form
+    if not student and new_email:
+        student = Student.objects.filter(email=new_email).first()
+    
+    # 3. If still not found, try to find by the USER's original email
+    if not student and user.email:
+        student = Student.objects.filter(email=user.email).first()
+        
+    if not student:
+        # Before creating, check if the email already exists in ANY other student record
+        existing_with_email = Student.objects.filter(email=new_email).first()
+        if existing_with_email:
+            # If it exists, let's just use that one (link it to this user)
+            student = existing_with_email
+            student.student_id = str(user.id) # Sync ID
+        else:
+            student = Student.objects.create(
+                student_id=str(user.id),
+                full_name=data.get('full_name'),
+                department=dept,
+                faculty=data.get('faculty'),
+                grade=data.get('grade'),
+                email=new_email
+            )
+    
+    # Update fields
+    student.full_name = data.get('full_name', student.full_name)
+    student.department = dept or student.department
+    student.faculty = data.get('faculty', student.faculty)
+    student.grade = data.get('grade', student.grade)
+    
+    # Update email only if it doesn't conflict with another student
+    if new_email and student.email != new_email:
+        if not Student.objects.filter(email=new_email).exclude(pk=student.pk).exists():
+            student.email = new_email
+            
+    student.save()
+    return student
+
 
 
 # ─────────────────────────────────────
@@ -68,8 +120,9 @@ def logout_view(request):
 # HOME
 # ─────────────────────────────────────
 def home(request):
-    # Show all active and approved events (or just upcoming ones)
-    events = Event.objects.filter(is_approved=True).order_by('event_date')[:6]
+    # Show all active and approved upcoming events
+    today = timezone.now().date()
+    events = Event.objects.filter(is_approved=True, event_date__gte=today).order_by('event_date')[:6]
     clubs = Club.objects.filter(is_active=True, is_approved=True)[:6]
     return render(request, 'app/index.html', {'events': events, 'clubs': clubs})
 
@@ -79,14 +132,49 @@ def home(request):
 # ─────────────────────────────────────
 @login_required
 def dashboard(request):
-    students = Student.objects.all()
-    events = Event.objects.filter(is_approved=True, status='upcoming')
-    registrations = EventRegistration.objects.all()
+    current_student = Student.objects.filter(student_id=str(request.user.id)).first()
+    if not current_student:
+        current_student = Student.objects.filter(email=request.user.email).first()
+        
+    today = timezone.now().date()
+    events = Event.objects.filter(is_approved=True, event_date__gte=today).order_by('event_date')
+    registrations = EventRegistration.objects.filter(student__student_id=str(request.user.id))
+    
     return render(request, 'app/dashboard.html', {
-        'students': students,
         'events': events,
+        'student': current_student,
         'registrations': registrations,
     })
+
+
+@login_required
+def profile_edit(request):
+    student = Student.objects.filter(student_id=str(request.user.id)).first()
+    if not student:
+        student = Student.objects.filter(email=request.user.email).first()
+        
+    if request.method == 'POST':
+        form = ProfileEditForm(request.POST)
+        if form.is_valid():
+            update_student_profile(request.user, form.cleaned_data)
+            django_messages.success(request, "Profile updated successfully!")
+            return redirect('dashboard')
+    else:
+        initial = {}
+        if student:
+            initial = {
+                'full_name': student.full_name,
+                'department': student.department,
+                'faculty': student.faculty,
+                'grade': student.grade,
+                'email': student.email
+            }
+        else:
+            initial = {'full_name': request.user.username, 'email': request.user.email}
+            
+        form = ProfileEditForm(initial=initial)
+        
+    return render(request, 'app/profile_form.html', {'form': form})
 
 
 # ─────────────────────────────────────
@@ -94,21 +182,34 @@ def dashboard(request):
 # ─────────────────────────────────────
 @login_required
 def club_admin(request):
-    if request.user.username != 'UNICLUBSADMIN':
-        django_messages.error(request, "Only the System Admin can access this panel.")
+    is_system_admin = request.user.username == 'UNICLUBSADMIN'
+    is_club_admin = hasattr(request.user, 'managed_club')
+    
+    if not is_system_admin and not is_club_admin:
+        django_messages.error(request, "Only admins can access this panel.")
         return redirect('home')
-    clubs = Club.objects.all()
-    events = Event.objects.all()
-    membership_requests = MembershipRequest.objects.filter(status='pending')
-    core_team_apps = CoreTeamApplication.objects.filter(status='pending')
+    
+    if is_system_admin:
+        clubs = Club.objects.all()
+        events = Event.objects.all()
+        membership_requests = MembershipRequest.objects.filter(status='pending')
+        core_team_apps = CoreTeamApplication.objects.filter(status='pending')
+        approved_members = MembershipRequest.objects.filter(status='approved')
+    else:
+        managed_club = request.user.managed_club
+        clubs = Club.objects.filter(pk=managed_club.pk)
+        events = Event.objects.filter(club=managed_club)
+        membership_requests = MembershipRequest.objects.filter(club=managed_club, status='pending')
+        core_team_apps = CoreTeamApplication.objects.filter(club=managed_club, status='pending')
+        approved_members = MembershipRequest.objects.filter(club=managed_club, status='approved')
+
     return render(request, 'app/club_admin.html', {
         'clubs': clubs,
         'events': events,
         'membership_requests': membership_requests,
         'core_team_apps': core_team_apps,
-        'total_members': Student.objects.count(),
-        'active_events': Event.objects.filter(status='upcoming').count(),
         'pending_requests': membership_requests.count() + core_team_apps.count(),
+        'approved_members': approved_members,
     })
 
 
@@ -148,8 +249,9 @@ def club_list(request):
 def club_detail(request, pk):
     club = get_object_or_404(Club, pk=pk)
     
-    # Get all events for this club
-    events = club.events.filter(is_approved=True)
+    # Get all upcoming events for this club
+    today = timezone.now().date()
+    events = club.events.filter(is_approved=True, event_date__gte=today).order_by('event_date')
     
     # Member count (Approved requests)
     members = Student.objects.filter(membership_requests__club=club, membership_requests__status='approved')
@@ -160,10 +262,14 @@ def club_detail(request, pk):
     if all_ratings.exists():
         avg_rating = round(sum(r.score for r in all_ratings) / all_ratings.count(), 1)
     
+    # Core Team
+    core_team = CoreTeamApplication.objects.filter(club=club, status='approved')
+    
     return render(request, 'app/club_detail.html', {
         'club': club,
         'events': events,
         'members': members,
+        'core_team': core_team,
         'avg_rating': avg_rating,
     })
 
@@ -177,6 +283,14 @@ def club_add(request):
         if form.is_valid():
             club = form.save(commit=False)
             club.is_approved = True
+            
+            # Create Club Admin User if credentials provided
+            admin_username = form.cleaned_data.get('admin_username')
+            admin_password = form.cleaned_data.get('admin_password')
+            if admin_username and admin_password:
+                user = User.objects.create_user(username=admin_username, password=admin_password)
+                club.admin_user = user
+            
             club.save()
             
             # Auto-create announcement if recruiting
@@ -188,8 +302,17 @@ def club_add(request):
                     club=club
                 )
             
-            django_messages.success(request, 'Club added successfully!')
-            return redirect('home')
+            # Auto-create announcement for Core Team if recruiting
+            if club.is_core_team_recruiting:
+                Announcement.objects.create(
+                    title=f"Core Team Recruitment: {club.name}",
+                    content=f"{club.name} is looking for dedicated Core Team members! Apply now to join the leadership.",
+                    announcement_type='club',
+                    club=club
+                )
+            
+            django_messages.success(request, 'Club added successfully with admin account!')
+            return redirect('club_admin')
     else:
         form = ClubForm()
     return render(request, 'app/club_form.html', {'form': form, 'title': 'Add New Club'})
@@ -204,6 +327,7 @@ def club_edit(request, pk):
         form = ClubForm(request.POST, request.FILES, instance=club)
         if form.is_valid():
             was_recruiting = club.is_recruiting
+            was_core_recruiting = club.is_core_team_recruiting
             club = form.save()
             
             # Auto-create announcement if just started recruiting
@@ -211,6 +335,15 @@ def club_edit(request, pk):
                 Announcement.objects.create(
                     title=f"Recruitment Drive: {club.name}",
                     content=f"{club.name} has started accepting new members! Visit their page to join.",
+                    announcement_type='club',
+                    club=club
+                )
+            
+            # Auto-create announcement if just started core team recruiting
+            if club.is_core_team_recruiting and not was_core_recruiting:
+                Announcement.objects.create(
+                    title=f"Core Team Open: {club.name}",
+                    content=f"{club.name} is looking for new Core Team members! Apply now to join the leadership and management.",
                     announcement_type='club',
                     club=club
                 )
@@ -246,32 +379,43 @@ def club_approve(request, pk):
 # EVENTS CRUD
 # ─────────────────────────────────────
 def event_list(request):
-    events = Event.objects.filter(is_approved=True)
-    return render(request, 'app/event_archive.html', {'events': events})
+    return redirect('event_archive')
 
 
 def event_add(request):
-    if not request.user.is_authenticated or request.user.username != 'UNICLUBSADMIN':
+    is_system_admin = request.user.username == 'UNICLUBSADMIN'
+    is_club_admin = hasattr(request.user, 'managed_club')
+    
+    if not is_system_admin and not is_club_admin:
         django_messages.error(request, "Only Admin can add events.")
         return redirect('home')
+        
     if request.method == 'POST':
         form = EventForm(request.POST, request.FILES)
         if form.is_valid():
             event = form.save(commit=False)
-            event.is_approved = True  # Admin added events are auto-approved
+            if is_club_admin:
+                event.club = request.user.managed_club
+            event.is_approved = True  # Auto-approved for admins
             event.save()
             django_messages.success(request, 'Event added successfully!')
-            return redirect('home')
+            return redirect('club_admin')
     else:
         form = EventForm()
+        # If club admin, pre-select and disable club choice? 
+        # For now just handle it in POST.
     return render(request, 'app/event_form.html', {'form': form, 'title': 'Add New Event'})
 
 
 def event_edit(request, pk):
-    if not request.user.is_authenticated or request.user.username != 'UNICLUBSADMIN':
-        django_messages.error(request, "Only Admin can edit events.")
-        return redirect('home')
+    is_system_admin = request.user.username == 'UNICLUBSADMIN'
+    is_club_admin = hasattr(request.user, 'managed_club')
     event = get_object_or_404(Event, pk=pk)
+    
+    if not is_system_admin and (not is_club_admin or request.user.managed_club != event.club):
+        django_messages.error(request, "You do not have permission to edit this event.")
+        return redirect('home')
+
     if request.method == 'POST':
         form = EventForm(request.POST, request.FILES, instance=event)
         if form.is_valid():
@@ -284,10 +428,14 @@ def event_edit(request, pk):
 
 
 def event_delete(request, pk):
-    if not request.user.is_authenticated or request.user.username != 'UNICLUBSADMIN':
-        django_messages.error(request, "Only Admin can delete events.")
-        return redirect('home')
+    is_system_admin = request.user.username == 'UNICLUBSADMIN'
+    is_club_admin = hasattr(request.user, 'managed_club')
     event = get_object_or_404(Event, pk=pk)
+    
+    if not is_system_admin and (not is_club_admin or request.user.managed_club != event.club):
+        django_messages.error(request, "You do not have permission to delete this event.")
+        return redirect('home')
+
     if request.method == 'POST':
         event.delete()
         django_messages.success(request, 'Event deleted.')
@@ -322,17 +470,31 @@ def event_detail(request, pk):
 # EVENT ARCHIVE (ratings)
 # ─────────────────────────────────────
 def event_archive(request):
-    past_events = Event.objects.filter(status='past', is_approved=True)
+    today = timezone.now().date()
+    past_events = Event.objects.filter(is_approved=True, event_date__lt=today).order_by('-event_date')
     rating_form = EventRatingForm()
+    # Only allow rating past events in the dropdown
+    rating_form.fields['event'].queryset = past_events
     if request.method == 'POST':
+        if not request.user.is_authenticated:
+            django_messages.error(request, 'You must be logged in to rate an event.')
+            return redirect('login')
         rating_form = EventRatingForm(request.POST)
         if rating_form.is_valid():
             rating = rating_form.save(commit=False)
-            # Automatically find or create a Student record for the logged-in user
-            student, _ = Student.objects.get_or_create(
-                full_name=request.user.username,
-                defaults={'student_id': request.user.id, 'department': 'General', 'email': request.user.email}
-            )
+            # Robust student retrieval for rating
+            student = Student.objects.filter(student_id=str(request.user.id)).first()
+            if not student:
+                student = Student.objects.filter(email=request.user.email).first()
+            
+            if not student:
+                student = Student.objects.create(
+                    student_id=str(request.user.id),
+                    full_name=request.user.username,
+                    department='General',
+                    email=request.user.email or f"{request.user.username}@university.edu"
+                )
+            
             rating.student = student
             try:
                 rating.save()
@@ -415,16 +577,39 @@ def membership_reject(request, pk):
 
 
 @login_required
-def membership_apply(request):
+def membership_apply(request, club_id):
+    club = get_object_or_404(Club, pk=club_id)
     if request.method == 'POST':
         form = MembershipRequestForm(request.POST)
         if form.is_valid():
-            form.save()
-            django_messages.success(request, 'Membership request submitted!')
+            # Update student profile from form
+            student = update_student_profile(request.user, form.cleaned_data)
+            
+            # Create the request
+            MembershipRequest.objects.create(
+                student=student,
+                club=club
+            )
+            django_messages.success(request, f'Membership request submitted for {club.name}!')
             return redirect('dashboard')
     else:
-        form = MembershipRequestForm()
-    return render(request, 'app/membership_form.html', {'form': form, 'title': 'Apply for Membership'})
+        # Pre-fill with existing student data if available
+        student = Student.objects.filter(student_id=str(request.user.id)).first()
+        initial = {}
+        if student:
+            initial = {
+                'full_name': student.full_name,
+                'department': student.department,
+                'faculty': student.faculty,
+                'grade': student.grade,
+                'email': student.email
+            }
+        else:
+            initial = {'email': request.user.email, 'full_name': request.user.username}
+            
+        form = MembershipRequestForm(initial=initial)
+        
+    return render(request, 'app/membership_form.html', {'form': form, 'title': f'Apply for {club.name}', 'club': club})
 
 
 # ─────────────────────────────────────
@@ -436,11 +621,30 @@ def event_register(request, pk):
     if request.method == 'POST':
         form = EventRegistrationForm(request.POST)
         if form.is_valid():
-            form.save()
+            # Update student profile
+            student = update_student_profile(request.user, form.cleaned_data)
+            
+            # Create registration
+            EventRegistration.objects.create(
+                student=student,
+                event=event
+            )
             django_messages.success(request, f'Registered for "{event.title}" successfully!')
             return redirect('dashboard')
     else:
-        form = EventRegistrationForm(initial={'event': event})
+        student = Student.objects.filter(student_id=str(request.user.id)).first()
+        initial = {}
+        if student:
+            initial = {
+                'full_name': student.full_name,
+                'department': student.department,
+                'faculty': student.faculty,
+                'grade': student.grade,
+                'email': student.email
+            }
+        else:
+            initial = {'email': request.user.email, 'full_name': request.user.username}
+        form = EventRegistrationForm(initial=initial)
     return render(request, 'app/registration_form.html', {'form': form, 'event': event})
 
 
@@ -464,30 +668,60 @@ def registration_reject(request, pk):
 # ANNOUNCEMENTS CRUD
 # ─────────────────────────────────────
 def announcements(request):
-    ann_list = Announcement.objects.filter(is_published=True)
+    # Filter to keep announcements fresh (last 30 days) and remove old clutter
+    from datetime import timedelta
+    fresh_limit = timezone.now() - timedelta(days=30)
+    ann_list = Announcement.objects.filter(is_published=True, published_at__gte=fresh_limit).order_by('-published_at')
     return render(request, 'app/announcements.html', {'announcements': ann_list})
 
 
+
+
+
+
+
+
 def announcement_add(request):
-    if not request.user.is_authenticated or request.user.username != 'UNICLUBSADMIN':
+    is_system_admin = request.user.username == 'UNICLUBSADMIN'
+    is_club_admin = hasattr(request.user, 'managed_club')
+    
+    if not is_system_admin and not is_club_admin:
         django_messages.error(request, "Only Admin can add announcements.")
         return redirect('home')
+        
     if request.method == 'POST':
-        form = AnnouncementForm(request.POST)
+        form = AnnouncementForm(request.POST, user=request.user)
         if form.is_valid():
-            form.save()
+            ann = form.save(commit=False)
+            if is_club_admin:
+                ann.club = request.user.managed_club
+                ann.announcement_type = 'club'
+            
+            # Add departments to content if selected
+            depts = form.cleaned_data.get('departments')
+            if depts:
+                ann.content += f"\n\nRecruiting for Departments: {', '.join(depts)}"
+                ann.title = f"CORE TEAM RECRUITMENT: {ann.title}"
+                ann.announcement_type = 'core_team'
+                ann.is_core_team = True
+            
+            ann.save()
             django_messages.success(request, 'Announcement published!')
             return redirect('announcements')
     else:
-        form = AnnouncementForm()
+        form = AnnouncementForm(user=request.user)
     return render(request, 'app/announcement_form.html', {'form': form, 'title': 'New Announcement'})
 
 
 def announcement_edit(request, pk):
-    if not request.user.is_authenticated or request.user.username != 'UNICLUBSADMIN':
-        django_messages.error(request, "Only Admin can edit announcements.")
-        return redirect('home')
+    is_system_admin = request.user.username == 'UNICLUBSADMIN'
+    is_club_admin = hasattr(request.user, 'managed_club')
     ann = get_object_or_404(Announcement, pk=pk)
+    
+    if not is_system_admin and (not is_club_admin or request.user.managed_club != ann.club):
+        django_messages.error(request, "You do not have permission to edit this announcement.")
+        return redirect('home')
+
     if request.method == 'POST':
         form = AnnouncementForm(request.POST, instance=ann)
         if form.is_valid():
@@ -500,10 +734,14 @@ def announcement_edit(request, pk):
 
 
 def announcement_delete(request, pk):
-    if not request.user.is_authenticated or request.user.username != 'UNICLUBSADMIN':
-        django_messages.error(request, "Only Admin can delete announcements.")
-        return redirect('home')
+    is_system_admin = request.user.username == 'UNICLUBSADMIN'
+    is_club_admin = hasattr(request.user, 'managed_club')
     ann = get_object_or_404(Announcement, pk=pk)
+    
+    if not is_system_admin and (not is_club_admin or request.user.managed_club != ann.club):
+        django_messages.error(request, "You do not have permission to delete this announcement.")
+        return redirect('home')
+
     if request.method == 'POST':
         ann.delete()
         django_messages.success(request, 'Announcement deleted.')
@@ -557,9 +795,18 @@ def messages_view(request):
 def club_info(request, pk):
     club = get_object_or_404(Club, pk=pk)
     if request.method == 'POST':
+        was_recruiting = club.is_recruiting
+        was_core_recruiting = club.is_core_team_recruiting
         form = ClubForm(request.POST, request.FILES, instance=club)
         if form.is_valid():
-            form.save()
+            club = form.save()
+            
+            # Auto-create announcements if toggled on
+            if club.is_recruiting and not was_recruiting:
+                Announcement.objects.create(title=f"Recruitment: {club.name}", content=f"{club.name} is recruiting!", announcement_type='club', club=club)
+            if club.is_core_team_recruiting and not was_core_recruiting:
+                Announcement.objects.create(title=f"Core Team Recruiting: {club.name}", content=f"{club.name} is looking for Core Team members!", announcement_type='club', club=club)
+                
             django_messages.success(request, 'Club info updated!')
             return redirect('club_admin')
     else:
@@ -580,28 +827,30 @@ def core_team_apply(request, pk):
     if request.method == 'POST':
         form = CoreTeamApplicationForm(request.POST)
         if form.is_valid():
+            # Update student profile
+            student = update_student_profile(request.user, form.cleaned_data)
+            
+            # Create application
             app = form.save(commit=False)
-            
-            # Robust student retrieval
-            student = Student.objects.filter(student_id=str(request.user.id)).first()
-            if not student:
-                student = Student.objects.filter(email=request.user.email).first()
-            
-            if not student:
-                student = Student.objects.create(
-                    student_id=str(request.user.id),
-                    full_name=request.user.username,
-                    department='General',
-                    email=request.user.email or f"{request.user.username}@university.edu"
-                )
-            
             app.student = student
             app.club = club
             app.save()
             django_messages.success(request, f"Your application for {app.department} Core Team submitted!")
             return redirect('club_detail', pk=pk)
     else:
-        form = CoreTeamApplicationForm()
+        student = Student.objects.filter(student_id=str(request.user.id)).first()
+        initial = {}
+        if student:
+            initial = {
+                'full_name': student.full_name,
+                'department_name': student.department,
+                'faculty': student.faculty,
+                'grade': student.grade,
+                'email': student.email
+            }
+        else:
+            initial = {'email': request.user.email, 'full_name': request.user.username}
+        form = CoreTeamApplicationForm(initial=initial)
     
     return render(request, 'app/core_team_form.html', {'form': form, 'club': club})
 
@@ -619,4 +868,22 @@ def core_team_reject(request, pk):
     app.status = 'rejected'
     app.save()
     django_messages.warning(request, f"{app.student.full_name} rejected for {app.department} Core Team.")
+    return redirect('club_admin')
+def member_remove(request, pk):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    req = get_object_or_404(MembershipRequest, pk=pk)
+    
+    # Permission check: system admin or club admin of this club
+    is_system_admin = request.user.username == 'UNICLUBSADMIN'
+    is_club_admin = hasattr(request.user, 'managed_club') and request.user.managed_club == req.club
+    
+    if not is_system_admin and not is_club_admin:
+        django_messages.error(request, "You do not have permission to remove members.")
+        return redirect('home')
+        
+    student_name = req.student.full_name
+    req.delete()
+    django_messages.warning(request, f"{student_name} has been removed from the club.")
     return redirect('club_admin')

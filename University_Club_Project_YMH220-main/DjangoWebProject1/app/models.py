@@ -1,6 +1,6 @@
-# -*- coding: utf-8 -*-
 from django.db import models
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 
 class Club(models.Model):
@@ -14,6 +14,7 @@ class Club(models.Model):
     is_core_team_recruiting = models.BooleanField(default=False)
     leader = models.CharField(max_length=200, blank=True, null=True, help_text="Name of the club leader")
     created_at = models.DateTimeField(default=timezone.now)
+    admin_user = models.OneToOneField(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='managed_club')
 
     def __str__(self):
         return self.name
@@ -46,6 +47,7 @@ class CoreTeamApplication(models.Model):
         ('Sponsorship', 'Sponsorship'),
         ('Project', 'Project'),
         ('Social Media', 'Social Media'),
+        ('Coordinator', 'Coordinator'),
     ]
     STATUS_CHOICES = [
         ('pending', 'Pending'),
@@ -82,6 +84,20 @@ class Event(models.Model):
 
     def __str__(self):
         return self.title
+
+    @property
+    def average_rating(self):
+        ratings = self.ratings.all()
+        if not ratings:
+            return 0
+        return round(sum(r.score for r in ratings) / ratings.count(), 1)
+
+    @property
+    def star_rating(self):
+        avg = self.average_rating
+        full_stars = int(avg)
+        half_star = 1 if (avg - full_stars) >= 0.5 else 0
+        return range(full_stars), range(half_star), range(5 - full_stars - half_star)
 
     class Meta:
         ordering = ['-event_date']
@@ -140,11 +156,13 @@ class Announcement(models.Model):
         ('school', 'School'),
         ('club', 'Club'),
         ('general', 'General'),
+        ('core_team', 'Core Team Recruitment'),
     ]
     title = models.CharField(max_length=200)
     content = models.TextField()
     announcement_type = models.CharField(max_length=20, choices=TYPE_CHOICES, default='general')
     club = models.ForeignKey(Club, on_delete=models.SET_NULL, null=True, blank=True, related_name='announcements')
+    is_core_team = models.BooleanField(default=False)
     is_published = models.BooleanField(default=True)
     published_at = models.DateTimeField(default=timezone.now)
 

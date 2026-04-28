@@ -17,11 +17,23 @@
                             {% if event.event_time %} &nbsp;|&nbsp; <i class="fas fa-clock mr-1 text-maroon"></i>{{ event.event_time }}{% endif %}
                             {% if event.location %} &nbsp;|&nbsp; <i class="fas fa-map-marker-alt mr-1 text-maroon"></i>{{ event.location }}{% endif %}
                         </p>
+                        <div class="text-warning h5">
+                            {% for i in "12345" %}
+                                {% if forloop.counter <= avg_rating %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                            <span class="text-muted small ml-2">({{ avg_rating|default:"0" }} / 5)</span>
+                        </div>
                     </div>
+                    {% if user.username == 'UNICLUBSADMIN' %}
                     <div class="text-right">
                         <a href="{% url 'event_edit' event.pk %}" class="btn btn-outline-primary btn-sm mr-1"><i class="fas fa-edit mr-1"></i>Edit</a>
                         <a href="{% url 'event_delete' event.pk %}" class="btn btn-outline-danger btn-sm"><i class="fas fa-trash mr-1"></i>Delete</a>
                     </div>
+                    {% endif %}
                 </div>
                 <hr>
                 <h5 class="font-weight-bold mb-3">About This Event</h5>

@@ -6,10 +6,17 @@
         <div class="col-md-3">
             <div class="card border-0 shadow-sm rounded-lg mb-4">
                 <div class="card-body text-center p-4">
-                    <img src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?auto=format&fit=crop&w=150" class="rounded-circle border p-1 mb-3" style="width:90px; height:90px; object-fit:cover; border-color:#800000 !important;">
-                    <h5 class="font-weight-bold mb-1">Student Panel</h5>
-                    <p class="text-muted small mb-3">University Club Portal</p>
-                    <a href="{% url 'membership_apply' %}" class="btn btn-maroon btn-sm btn-block">Apply to a Club</a>
+                    <div class="mx-auto mb-3 d-flex align-items-center justify-content-center bg-light rounded-circle border shadow-sm" style="width:90px; height:90px; border-color:#800000 !important;">
+                        <i class="fas fa-user fa-3x text-muted"></i>
+                    </div>
+                    <h5 class="font-weight-bold mb-1">{% if student %}{{ student.full_name }}{% else %}{{ user.username }}{% endif %}</h5>
+                    <p class="text-muted small mb-3">University Club Member</p>
+                    <a href="{% url 'profile_edit' %}" class="btn btn-outline-maroon btn-sm btn-block mb-2">
+                        <i class="fas fa-user-edit mr-1"></i>Edit Profile
+                    </a>
+                    {% if user.username != 'UNICLUBSADMIN' and not user.managed_club %}
+                    <a href="{% url 'club_list' %}" class="btn btn-maroon btn-sm btn-block">Apply to a Club</a>
+                    {% endif %}
                 </div>
             </div>
             <div class="list-group sidebar-menu border-0 shadow-sm rounded-lg bg-white p-2">
@@ -22,9 +29,11 @@
                 <a href="{% url 'messages' %}" class="list-group-item list-group-item-action border-0">
                     <i class="fas fa-envelope mr-2"></i>Messages
                 </a>
-                <a href="{% url 'membership_apply' %}" class="list-group-item list-group-item-action border-0">
+                {% if user.username != 'UNICLUBSADMIN' and not user.managed_club %}
+                <a href="{% url 'club_list' %}" class="list-group-item list-group-item-action border-0">
                     <i class="fas fa-users mr-2"></i>Join a Club
                 </a>
+                {% endif %}
                 <a href="{% url 'home' %}" class="list-group-item list-group-item-action border-0 text-danger mt-3">
                     <i class="fas fa-sign-out-alt mr-2"></i>Logout
                 </a>

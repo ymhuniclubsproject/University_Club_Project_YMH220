@@ -4,6 +4,9 @@ from .models import Club, Student, Event, MembershipRequest, EventRegistration, 
 
 
 class ClubForm(forms.ModelForm):
+    admin_username = forms.CharField(max_length=150, required=False, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Admin Username'}))
+    admin_password = forms.CharField(max_length=128, required=False, widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Admin Password'}))
+
     class Meta:
         model = Club
         fields = ['name', 'description', 'category', 'logo', 'leader', 'is_recruiting', 'is_core_team_recruiting']
@@ -33,7 +36,65 @@ class StudentForm(forms.ModelForm):
         }
 
 
+FACULTY_CHOICES = [
+    ('', '--- Select Faculty ---'),
+    ('Diş Hekimliği Fakültesi', 'Diş Hekimliği Fakültesi'),
+    ('Eczacılık Fakültesi', 'Eczacılık Fakültesi'),
+    ('Eğitim Fakültesi', 'Eğitim Fakültesi'),
+    ('Fen Fakültesi', 'Fen Fakültesi'),
+    ('İktisadi ve İdari Bilimler Fakültesi', 'İktisadi ve İdari Bilimler Fakültesi'),
+    ('İlahiyat Fakültesi', 'İlahiyat Fakültesi'),
+    ('İletişim Fakültesi', 'İletişim Fakültesi'),
+    ('İnsani ve Sosyal Bilimler Fakültesi', 'İnsani ve Sosyal Bilimler Fakültesi'),
+    ('Mimarlık Fakültesi', 'Mimarlık Fakültesi'),
+    ('Mühendislik Fakültesi', 'Mühendislik Fakültesi'),
+    ('Sağlık Bilimleri Fakültesi', 'Sağlık Bilimleri Fakültesi'),
+    ('Spor Bilimleri Fakültesi', 'Spor Bilimleri Fakültesi'),
+    ('Su Ürünleri Fakültesi', 'Su Ürünleri Fakültesi'),
+    ('Teknoloji Fakültesi', 'Teknoloji Fakültesi'),
+    ('Tıp Fakültesi', 'Tıp Fakültesi'),
+    ('Veteriner Fakültesi', 'Veteriner Fakültesi'),
+]
+
+GRADE_CHOICES = [
+    ('', '--- Select Grade ---'),
+    ('Hazırlık', 'Hazırlık'),
+    ('1. Sınıf', '1. Sınıf'),
+    ('2. Sınıf', '2. Sınıf'),
+    ('3. Sınıf', '3. Sınıf'),
+    ('4. Sınıf', '4. Sınıf'),
+    ('Lisansüstü', 'Lisansüstü'),
+]
+
+DEPARTMENT_CHOICES_UNI = [
+    ('', '--- Select Department ---'),
+    ('Yazılım Mühendisliği', 'Yazılım Mühendisliği'),
+    ('Bilgisayar Mühendisliği', 'Bilgisayar Mühendisliği'),
+    ('Adli Bilişim Mühendisliği', 'Adli Bilişim Mühendisliği'),
+    ('Elektrik-Elektronik Mühendisliği', 'Elektrik-Elektronik Mühendisliği'),
+    ('Makine Mühendisliği', 'Makine Mühendisliği'),
+    ('İnşaat Mühendisliği', 'İnşaat Mühendisliği'),
+    ('Mekatronik Mühendisliği', 'Mekatronik Mühendisliği'),
+    ('Tıp', 'Tıp'),
+    ('Diş Hekimliği', 'Diş Hekimliği'),
+    ('Hemşirelik', 'Hemşirelik'),
+    ('Beslenme ve Diyetetik', 'Beslenme ve Diyetetik'),
+    ('İşletme', 'İşletme'),
+    ('İktisat', 'İktisat'),
+    ('Siyaset Bilimi ve Kamu Yönetimi', 'Siyaset Bilimi ve Kamu Yönetimi'),
+    ('İlahiyat', 'İlahiyat'),
+    ('Türkçe Öğretmenliği', 'Türkçe Öğretmenliği'),
+    ('Sınıf Öğretmenliği', 'Sınıf Öğretmenliği'),
+    ('Diğer', 'Diğer'),
+]
+
 class CoreTeamApplicationForm(forms.ModelForm):
+    full_name = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name'}))
+    department_name = forms.ChoiceField(choices=DEPARTMENT_CHOICES_UNI, widget=forms.Select(attrs={'class': 'form-control'}))
+    faculty = forms.ChoiceField(choices=FACULTY_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
+    grade = forms.ChoiceField(choices=GRADE_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}))
+
     class Meta:
         model = CoreTeamApplication
         fields = ['department']
@@ -58,39 +119,43 @@ class EventForm(forms.ModelForm):
         }
 
 
-class MembershipRequestForm(forms.ModelForm):
-    class Meta:
-        model = MembershipRequest
-        fields = ['student', 'club']
-        widgets = {
-            'student': forms.Select(attrs={'class': 'form-control'}),
-            'club': forms.Select(attrs={'class': 'form-control'}),
-        }
+class MembershipRequestForm(forms.Form):
+    full_name = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name'}))
+    department = forms.ChoiceField(choices=DEPARTMENT_CHOICES_UNI, widget=forms.Select(attrs={'class': 'form-control'}))
+    faculty = forms.ChoiceField(choices=FACULTY_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
+    grade = forms.ChoiceField(choices=GRADE_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}))
+    club_id = forms.IntegerField(widget=forms.HiddenInput(), required=False)
 
 
-class EventRegistrationForm(forms.ModelForm):
-    class Meta:
-        model = EventRegistration
-        fields = ['student', 'event']
-        widgets = {
-            'student': forms.Select(attrs={'class': 'form-control'}),
-            'event': forms.Select(attrs={'class': 'form-control'}),
-        }
+class EventRegistrationForm(forms.Form):
+    full_name = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name'}))
+    department = forms.ChoiceField(choices=DEPARTMENT_CHOICES_UNI, widget=forms.Select(attrs={'class': 'form-control'}))
+    faculty = forms.ChoiceField(choices=FACULTY_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
+    grade = forms.ChoiceField(choices=GRADE_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}))
+    event_id = forms.IntegerField(widget=forms.HiddenInput(), required=False)
 
 
 class EventRatingForm(forms.ModelForm):
     class Meta:
         model = EventRating
-        fields = ['event', 'student', 'score', 'comment']
+        fields = ['event', 'score', 'comment']
         widgets = {
             'event': forms.Select(attrs={'class': 'form-control'}),
-            'student': forms.Select(attrs={'class': 'form-control'}),
             'score': forms.Select(attrs={'class': 'form-control'}),
             'comment': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Write your comment...'}),
         }
 
 
 class AnnouncementForm(forms.ModelForm):
+    departments = forms.MultipleChoiceField(
+        choices=CoreTeamApplication.DEPARTMENT_CHOICES,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
+        label="Target Departments (for Core Team)"
+    )
+
     class Meta:
         model = Announcement
         fields = ['title', 'content', 'announcement_type', 'club']
@@ -100,6 +165,21 @@ class AnnouncementForm(forms.ModelForm):
             'announcement_type': forms.Select(attrs={'class': 'form-control'}),
             'club': forms.Select(attrs={'class': 'form-control'}),
         }
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if user and hasattr(user, 'managed_club') and user.username != 'UNICLUBSADMIN':
+            # Hide fields for club admins
+            self.fields['announcement_type'].widget = forms.HiddenInput()
+            self.fields['club'].widget = forms.HiddenInput()
+            self.fields['announcement_type'].required = False
+            self.fields['club'].required = False
+        else:
+            # Hide departments for system admin if not needed? 
+            # Or just leave it.
+            pass
+
 
 
 class MessageForm(forms.ModelForm):
@@ -140,3 +220,9 @@ class UserRegistrationForm(forms.ModelForm):
 class LoginForm(forms.Form):
     username = forms.CharField(widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Username'}))
     password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'form-control', 'placeholder': 'Password'}))
+class ProfileEditForm(forms.Form):
+    full_name = forms.CharField(max_length=200, widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Full Name'}))
+    department = forms.ChoiceField(choices=DEPARTMENT_CHOICES_UNI, widget=forms.Select(attrs={'class': 'form-control'}))
+    faculty = forms.ChoiceField(choices=FACULTY_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
+    grade = forms.ChoiceField(choices=GRADE_CHOICES, widget=forms.Select(attrs={'class': 'form-control'}))
+    email = forms.EmailField(widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Email'}))
