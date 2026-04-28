@@ -1,159 +1,179 @@
+{% load static %}
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FÜ Kulüp Yönetim Sistemi</title>
-
+    <title>UNICLUBS</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
-
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --maroon: #800000;
-            --dark-admin: #1a1a1a;
+            --maroon-dark: #600000;
+            --maroon-light: #fceceb;
             --soft-bg: #f4f7f6;
         }
-
         body {
             background-color: var(--soft-bg);
-            font-family: 'Segoe UI', sans-serif;
-            /* Mobil menü için alt boşluk eklendi */
+            font-family: 'Inter', 'Segoe UI', sans-serif;
             padding-bottom: 60px;
         }
-
-        /* Navbar Tasarımı */
         .navbar-custom {
             background-color: var(--maroon);
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
         }
-
-            .navbar-custom .nav-link {
-                color: white !important;
-                font-weight: 500;
-                padding: 0.5rem 1rem !important;
-                transition: 0.3s;
-            }
-
-        /* Kulüp Yönetimi Linki */
+        .navbar-custom .nav-link {
+            color: white !important;
+            font-weight: 500;
+            padding: 0.5rem 1rem !important;
+            transition: 0.3s;
+        }
+        .navbar-custom .nav-link:hover { opacity: 0.85; }
         .nav-club-admin {
-            border: 1px solid rgba(255,255,255,0.3);
-            border-radius: 5px;
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 6px;
             margin-right: 5px;
             background-color: rgba(255,255,255,0.1);
         }
-
-        /* SİSTEM ADMİN Linki (Kritik Ayrım) */
         .nav-system-admin {
-            background-color: var(--dark-admin) !important;
-            border-radius: 5px;
-            color: #ffc107 !important; /* Altın sarısı vurgu */
+            background-color: #1a1a1a !important;
+            border-radius: 6px;
+            color: #ffc107 !important;
             font-weight: bold !important;
             border: 1px solid #ffc107;
         }
-
-            .nav-system-admin:hover {
-                background-color: #000 !important;
-                box-shadow: 0 0 8px #ffc107;
-            }
-
+        .nav-system-admin:hover { background-color: #000 !important; box-shadow: 0 0 8px #ffc107; }
         .navbar-custom .nav-link.btn-student {
             background-color: white !important;
-            color: #800000 !important; /* Yazı artık beyaz kutu içinde bordo ve görünür */
+            color: #800000 !important;
             font-weight: bold !important;
             border-radius: 20px;
             padding: 5px 20px !important;
             margin-left: 10px;
-            display: inline-block !important;
         }
-
-        /* MOBİL ALT NAVİGASYON (Sadece Mobilde Görünür) */
+        .btn-logout {
+            background-color: rgba(0, 0, 0, 0.2);
+            color: white !important;
+            border-radius: 20px;
+            padding: 5px 20px !important;
+            margin-left: 10px;
+            font-weight: 500;
+        }
+        .text-maroon { color: var(--maroon) !important; }
+        .bg-maroon { background-color: var(--maroon) !important; }
+        .btn-maroon {
+            background-color: var(--maroon);
+            color: white !important;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: 0.25s;
+        }
+        .btn-maroon:hover { background-color: var(--maroon-dark); transform: translateY(-1px); }
+        .border-bottom-maroon { border-bottom: 4px solid var(--maroon) !important; }
+        .border-top-maroon { border-top: 4px solid var(--maroon) !important; }
+        .sidebar-menu .list-group-item { transition: 0.2s; cursor: pointer; }
+        .sidebar-menu .list-group-item:hover { background-color: var(--maroon-light); padding-left: 20px; }
+        .sidebar-menu .list-group-item.active-item {
+            background-color: var(--maroon-light) !important;
+            color: var(--maroon) !important;
+            border-left: 4px solid var(--maroon) !important;
+            font-weight: bold;
+        }
+        /* Django Messages */
+        .messages-container { position: fixed; top: 70px; right: 20px; z-index: 9999; min-width: 300px; }
+        .alert { animation: slideIn 0.3s ease; }
+        @keyframes slideIn { from { opacity:0; transform: translateX(50px); } to { opacity:1; transform: translateX(0); } }
+        /* Mobile nav */
         @media (max-width: 768px) {
             .mobile-bottom-nav {
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: white;
-                display: flex;
-                justify-content: space-around;
-                padding: 8px 0;
-                border-top: 1px solid #eee;
-                z-index: 1050;
+                position: fixed; bottom: 0; left: 0; right: 0;
+                background: white; display: flex; justify-content: space-around;
+                padding: 8px 0; border-top: 1px solid #eee; z-index: 1050;
             }
-
-                .mobile-bottom-nav a {
-                    text-align: center;
-                    color: #666;
-                    font-size: 10px;
-                    text-decoration: none;
-                }
-
-                .mobile-bottom-nav i {
-                    display: block;
-                    font-size: 18px;
-                    color: var(--maroon);
-                }
-
-            .navbar-collapse {
-                background: var(--maroon);
-                padding: 10px;
-                border-radius: 0 0 10px 10px;
-            }
+            .mobile-bottom-nav a { text-align: center; color: #666; font-size: 10px; text-decoration: none; }
+            .mobile-bottom-nav i { display: block; font-size: 18px; color: var(--maroon); }
+            .navbar-collapse { background: var(--maroon); padding: 10px; border-radius: 0 0 10px 10px; }
         }
-
-        @media (min-width: 769px) {
-            .mobile-bottom-nav {
-                display: none;
-            }
-        }
+        @media (min-width: 769px) { .mobile-bottom-nav { display: none; } }
     </style>
 </head>
 <body>
+    <div class="messages-container">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{% if message.tags == 'error' %}danger{% elif message.tags == 'warning' %}warning{% else %}success{% endif %} alert-dismissible shadow-sm" role="alert">
+                    {{ message }}
+                    <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+    </div>
 
-    <nav class="navbar navbar-expand-lg navbar-custom sticky-top">
-        <div class="container-fluid">
-            <a class="navbar-brand text-white font-weight-bold" href="{% url 'home' %}">
-                <i class="fas fa-university mr-2"></i>KULÜP PORTAL
+    <nav class="navbar navbar-expand-lg navbar-custom sticky-top p-0">
+        <div class="container-fluid p-0">
+            <a class="navbar-brand text-white font-weight-bold d-flex align-items-center ml-3" href="{% url 'home' %}">
+                <img src="{% static 'app/content/fu_logo_final_v4.png' %}" alt="FU Logo" style="height: 48px; width: auto; margin-right: 12px;">
+                UNICLUBS
             </a>
-
             <button class="navbar-toggler text-white border-0" type="button" data-toggle="collapse" data-target="#navbarNav">
                 <i class="fas fa-bars"></i>
             </button>
-
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav mr-auto">
-                    <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Ana Sayfa</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'announcements' %}">Duyurular</a></li>
-                    <li class="nav-item"><a class="nav-link" href="{% url 'event_archive' %}">Arşiv</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'announcements' %}">Announcements</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'event_archive' %}">Archive</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'club_list' %}">Clubs</a></li>
                 </ul>
-
                 <ul class="navbar-nav ml-auto align-items-center">
-                    <li class="nav-item">
-                        <a class="nav-link nav-club-admin" href="{% url 'club_admin' %}">
-                            <i class="fas fa-tasks mr-1"></i> Kulüp Yönetimi
-                        </a>
-                    </li>
+                    {% if user.is_authenticated %}
+                        {% if user.username == 'UNICLUBSADMIN' or user.managed_club %}
+                            <li class="nav-item">
+                                <a class="nav-link nav-club-admin" href="{% url 'club_admin' %}">
+                                    <i class="fas fa-tasks mr-1"></i> Club Management
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% if user.username == 'UNICLUBSADMIN' %}
+                            <li class="nav-item">
+                                <a class="nav-link nav-system-admin" href="{% url 'system_admin' %}">
+                                    <i class="fas fa-user-shield mr-1"></i> SYSTEM ADMIN
+                                </a>
+                            </li>
+                        {% endif %}
 
-                    <li class="nav-item">
-                        <a class="nav-link nav-system-admin" href="{% url 'system_admin' %}">
-                            <i class="fas fa-user-shield mr-1"></i> SİSTEM ADMİN
-                        </a>
-                    </li>
-
-                    <li class="nav-item ml-2">
-                        <a class="nav-link btn-student" href="{% url 'dashboard' %}">Öğrenci Girişi</a>
-                    </li>
+                        <li class="nav-item d-flex align-items-center">
+                            <span class="text-white small">Hello,</span>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn-student" href="{% url 'dashboard' %}">{{ user.username }}</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn-logout" href="{% url 'logout' %}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link btn-login" href="{% url 'login' %}">Login</a>
+                        </li>
+                    {% endif %}
                 </ul>
             </div>
         </div>
     </nav>
 
     <div class="mobile-bottom-nav">
-        <a href="{% url 'home' %}"><i class="fas fa-home"></i>Ana Sayfa</a>
-        <a href="{% url 'event_archive' %}"><i class="fas fa-calendar-alt"></i>Etkinlikler</a>
-        <a href="#"><i class="fas fa-users"></i>Kulüpler</a>
-        <a href="{% url 'dashboard' %}"><i class="fas fa-user"></i>Profil</a>
+        <a href="{% url 'home' %}"><i class="fas fa-home"></i>Home</a>
+        <a href="{% url 'event_archive' %}"><i class="fas fa-calendar-alt"></i>Events</a>
+        <a href="{% url 'club_list' %}"><i class="fas fa-users"></i>Clubs</a>
+        {% if user.is_authenticated %}
+            <a href="{% url 'dashboard' %}"><i class="fas fa-user"></i>Profile</a>
+        {% else %}
+            <a href="{% url 'login' %}"><i class="fas fa-sign-in-alt"></i>Login</a>
+        {% endif %}
     </div>
 
     <div class="container-fluid py-4">
@@ -162,5 +182,10 @@
 
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        setTimeout(function () {
+            document.querySelectorAll('.alert').forEach(a => a.remove());
+        }, 4000);
+    </script>
 </body>
 </html>

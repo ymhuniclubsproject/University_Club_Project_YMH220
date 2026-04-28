@@ -1,0 +1,36 @@
+{% extends "app/layout.html" %}
+{% block content %}
+<div class="container py-5" style="max-width:600px;">
+    <div class="card border-0 shadow-lg rounded-xl overflow-hidden">
+        <div class="card-header bg-maroon text-white py-4 text-center">
+            <h4 class="font-weight-bold mb-0"><i class="fas fa-user-edit mr-2"></i>Edit Your Profile</h4>
+        </div>
+        <div class="card-body p-5 bg-white">
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="form-group mb-4">
+                    <label class="font-weight-bold small text-uppercase text-muted">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                        <div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <div class="mt-5">
+                    <button type="submit" class="btn btn-maroon btn-block py-3 shadow-sm font-weight-bold">
+                        <i class="fas fa-save mr-2"></i>Save Profile Changes
+                    </button>
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary btn-block mt-3 py-2">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+<style>
+    .rounded-xl { border-radius: 20px !important; }
+    .bg-maroon { background-color: #800000 !important; }
+</style>
+{% endblock %}

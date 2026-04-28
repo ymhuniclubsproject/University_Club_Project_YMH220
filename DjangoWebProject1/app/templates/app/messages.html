@@ -1,159 +1,97 @@
 {% extends "app/layout.html" %}
 {% block content %}
 <div class="container-fluid px-4">
-    <div class="row" style="height: 85vh;">
-
+    <div class="row" style="height:85vh;">
+        <!-- SIDEBAR -->
         <div class="col-md-2 border-right pr-4">
             <div class="text-center mb-4">
-                <div class="bg-maroon rounded-circle mx-auto d-flex align-items-center justify-content-center text-white shadow" style="width: 60px; height: 60px; background-color: #800000;">
-                    <i class="fas fa-desktop"></i>
+                <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center text-white shadow" style="width:60px;height:60px;background-color:#800000;">
+                    <i class="fas fa-envelope"></i>
                 </div>
-                <h6 class="mt-2 font-weight-bold small text-uppercase">BT Kulübü Yönetim</h6>
+                <h6 class="mt-2 font-weight-bold small text-uppercase">Club Messages</h6>
             </div>
             <div class="list-group sidebar-menu border-0 small">
-                <a href="{% url 'dashboard' %}" class="list-group-item text-dark">
-                    <i class="fas fa-home mr-2"></i> Genel Bakış
+                {% for club in clubs %}
+                <a href="?club={{ club.pk }}" class="list-group-item text-dark border-bottom {% if selected_club.pk == club.pk %}active-item{% endif %}">
+                    <i class="fas fa-university mr-2 text-muted"></i>{{ club.name }}
+                    {% with unread=club.received_messages.count %}
+                        {% if unread > 0 %}<span class="badge badge-danger float-right">{{ unread }}</span>{% endif %}
+                    {% endwith %}
                 </a>
-                <a href="{% url 'messages' %}" class="list-group-item active">
-                    <i class="fas fa-envelope mr-2"></i> Mesajlar
-                </a>
-                <div class="p-2 mt-4 bg-soft-maroon rounded small border border-danger shadow-sm">
-                    <p class="mb-0 text-maroon font-weight-bold"><i class="fas fa-hands-helping mr-1"></i> İş Birliği Paneli</p>
-                    <p class="extra-small text-muted mb-0">Kulüpler arası ortak etkinlik planlaması buradan yürütülür.</p>
-                </div>
+                {% empty %}
+                <p class="text-muted small">No clubs yet.</p>
+                {% endfor %}
             </div>
         </div>
 
-        <div class="col-md-3 border-right px-0 bg-white shadow-sm">
-            <div class="p-3 bg-maroon text-white font-weight-bold d-flex justify-content-between align-items-center" style="background-color: #800000;">
-                <span>Sohbetler</span>
-                <i class="fas fa-edit small" title="Yeni Sohbet Başlat"></i>
-            </div>
-            <div class="list-group list-group-flush overflow-auto" style="height: 70vh;">
-                <div class="list-group-item list-group-item-action border-0 active-chat p-3" style="background-color: #fceceb; border-left: 4px solid #800000;">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-maroon rounded-circle p-2 mr-3 text-white d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: #800000;">
-                            <i class="fas fa-users"></i>
-                        </div>
-                        <div style="flex: 1;">
-                            <div class="d-flex justify-content-between">
-                                <span class="font-weight-bold small text-dark">Münazara Kulübü</span>
-                                <small class="text-muted">10:30</small>
-                            </div>
-                            <p class="mb-0 small text-truncate text-muted">Ortak etkinlik taslağı ekte.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="col-md-7 d-flex flex-column bg-light p-0 border">
+        <!-- CHAT -->
+        <div class="col-md-10 d-flex flex-column p-0">
+            {% if selected_club %}
             <div class="p-3 bg-white border-bottom d-flex justify-content-between align-items-center shadow-sm">
-                <span class="font-weight-bold text-maroon"><i class="fas fa-comments mr-2"></i> Sohbet: Münazara Kulübü</span>
-                <span class="badge badge-pill badge-light border text-muted small">Çevrimiçi</span>
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'club_detail' selected_club.pk %}" class="btn btn-sm btn-outline-secondary mr-3 rounded-circle">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <span class="font-weight-bold text-maroon">
+                        <i class="fas fa-comments mr-2"></i>Chat: {{ selected_club.name }}
+                    </span>
+                </div>
+                <span class="badge badge-pill badge-light border text-muted small">Online</span>
             </div>
 
-            <div id="chatWindow" class="flex-grow-1 p-4 overflow-auto d-flex flex-column" style="background-color: #f8f9fa;">
-                <div class="msg-received mb-3 shadow-sm">
-                    Merhaba, 10 Kasım etkinliği için ortak çalışma yapabilir miyiz?
-                </div>
-                <div class="msg-sent mb-3 shadow-sm align-self-end">
-                    Harika fikir! Etkinlik planlamasını kolaylaştırmak için taslak dosyayı buraya ekliyorum.
-                </div>
-                <div class="msg-sent mb-3 shadow-sm align-self-end text-white p-2 rounded-lg" style="background-color: #a04040; max-width: 250px;">
-                    <div class="d-flex align-items-center">
-                        <i class="fas fa-file-pdf fa-2x mr-3 text-white"></i>
-                        <div>
-                            <p class="mb-0 small font-weight-bold">Etkinlik_Taslagi.pdf</p>
-                            <small class="opacity-75">1.2 MB</small>
-                        </div>
+            <div id="chatWindow" class="flex-grow-1 p-4 overflow-auto d-flex flex-column" style="background-color:#f8f9fa; height:60vh;">
+                {% for msg in chat_messages %}
+                    {% if msg.sender_name == request.user.username %}
+                    <div class="msg-sent mb-3 shadow-sm align-self-end">
+                        <strong class="d-block small text-white-50">{{ msg.sender_name }}</strong>
+                        {{ msg.content }}
+                        <div class="text-right" style="font-size:10px; opacity:0.7;">{{ msg.sent_at|date:"H:i" }}</div>
                     </div>
-                </div>
+                    {% else %}
+                    <div class="msg-received mb-3 shadow-sm">
+                        <strong class="d-block small text-muted">{{ msg.sender_name }}</strong>
+                        {{ msg.content }}
+                        <div style="font-size:10px; opacity:0.7;">{{ msg.sent_at|date:"H:i" }}</div>
+                    </div>
+                    {% endif %}
+                {% empty %}
+                <div class="text-center text-muted mt-5">No messages yet. Send the first message!</div>
+                {% endfor %}
             </div>
 
             <div class="p-3 bg-white border-top">
-                <div class="input-group shadow-sm border rounded-pill overflow-hidden bg-white px-2">
-                    <div class="input-group-prepend">
-                        <label for="fileInput" class="btn btn-link text-muted mb-0 mt-1">
-                            <i class="fas fa-paperclip h5"></i>
-                        </label>
-                        <input type="file" id="fileInput" style="display: none;" accept="image/*,.pdf">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="receiver_club" value="{{ selected_club.pk }}">
+                    <div class="input-group shadow-sm border rounded-pill overflow-hidden bg-white px-2">
+                        <input type="text" name="content" id="msgContent" class="form-control border-0 bg-transparent" placeholder="Type your message...">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn font-weight-bold px-4" style="color:#800000;">SEND</button>
+                        </div>
                     </div>
-                    <input type="text" id="msgContent" class="form-control border-0 bg-transparent" placeholder="Mesajınızı yazın veya dosya seçin...">
-                    <div class="input-group-append">
-                        <button id="sendBtnAction" class="btn text-maroon font-weight-bold px-4">GÖNDER</button>
-                    </div>
-                </div>
-                <small class="text-muted mt-2 ml-3 d-block extra-small"><i class="fas fa-info-circle mr-1"></i> PDF ve Görsel (JPG/PNG) formatları desteklenir.</small>
+                </form>
             </div>
+            {% else %}
+            <div class="d-flex align-items-center justify-content-center h-100 text-muted text-center p-5">
+                <div>
+                    <i class="fas fa-comments fa-4x mb-3" style="color:#ddd;"></i>
+                    <h5>Select a Club to Start Chatting</h5>
+                    <p class="small">Choose a club from the left panel to view messages.</p>
+                </div>
+            </div>
+            {% endif %}
         </div>
     </div>
 </div>
-
 <style>
-    .msg-received {
-        background-color: #e9ecef;
-        padding: 12px 18px;
-        border-radius: 15px 15px 15px 0;
-        max-width: 70%;
-        font-size: 0.9rem;
-    }
-
-    .msg-sent {
-        background-color: #800000;
-        color: white;
-        padding: 12px 18px;
-        border-radius: 15px 15px 0 15px;
-        max-width: 70%;
-        font-size: 0.9rem;
-    }
-
-    .text-maroon {
-        color: #800000 !important;
-    }
-
-    .extra-small {
-        font-size: 11px;
-    }
-
-    #chatWindow::-webkit-scrollbar {
-        width: 6px;
-    }
-
-    #chatWindow::-webkit-scrollbar-thumb {
-        background: #dcdcdc;
-        border-radius: 10px;
-    }
+    .msg-received { background-color:#e9ecef; padding:12px 18px; border-radius:15px 15px 15px 0; max-width:70%; font-size:0.9rem; }
+    .msg-sent { background-color:#800000; color:white; padding:12px 18px; border-radius:15px 15px 0 15px; max-width:70%; font-size:0.9rem; }
+    .text-maroon { color: #800000 !important; }
+    .sidebar-menu .active-item { background-color: #fceceb !important; color: #800000 !important; border-left: 4px solid #800000 !important; font-weight: bold; }
+    #chatWindow { scroll-behavior: smooth; }
 </style>
-
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const sendBtn = document.getElementById('sendBtnAction');
-        const input = document.getElementById('msgContent');
-        const chatWindow = document.getElementById('chatWindow');
-        const fileInput = document.getElementById('fileInput');
-
-        function sendMessage() {
-            const text = input.value.trim();
-            if (text !== "") {
-                const msg = document.createElement('div');
-                msg.className = 'msg-sent mb-3 shadow-sm align-self-end';
-                msg.textContent = text;
-                chatWindow.appendChild(msg);
-                input.value = "";
-                chatWindow.scrollTop = chatWindow.scrollHeight;
-            }
-        }
-
-        // Dosya Seçildiğinde Bilgi Ver
-        fileInput.addEventListener('change', function () {
-            if (this.files[0]) {
-                input.value = this.files[0].name + " (Gönderilmeye hazır)";
-            }
-        });
-
-        sendBtn.addEventListener('click', sendMessage);
-        input.addEventListener('keypress', function (e) { if (e.key === 'Enter') sendMessage(); });
-    });
+    var chatWindow = document.getElementById('chatWindow');
+    if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight;
 </script>
 {% endblock %}

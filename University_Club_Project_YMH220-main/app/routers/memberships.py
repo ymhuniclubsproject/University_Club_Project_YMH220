@@ -1,0 +1,24 @@
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+from app.core.deps import get_db, get_current_user
+from app.models.user import RoleEnum
+from app.repositories.membership_repository import MembershipRepository
+from app.schemas.membership import MembershipUpdate, MembershipResponse
+
+router = APIRouter(prefix="/memberships", tags=["Memberships"])
+
+@router.post("/join/{club_id}", response_model=MembershipResponse) # Endpoint for users to submit a join request to a club | Kullanıcıların bir kulübe katılma isteği göndermesi için uç nokta
+def request_join(club_id: int, db: Session = Depends(get_db), current_user = Depends(get_current_user)):
+    return MembershipRepository.create_request(db, current_user.id, club_id)
+
+@router.put("/approve/{membership_id}", response_model=MembershipResponse) # Endpoint to update the status of a membership request | Bir üyelik isteğinin durumunu güncellemek için uç nokta
+def approve_member(
+    membership_id: int, 
+    data: MembershipUpdate, 
+    db: Session = Depends(get_db), 
+    current_user = Depends(get_current_user)
+):
+    # Restricts approval/rejection permissions to club managers and admins | Onaylama/reddetme yetkisini kulüp yöneticileri ve adminlerle sınırlandırır
+    if current_user.role not in [RoleEnum.club_manager, RoleEnum.admin]:
+        raise HTTPException(status_code=403, detail="You do not have permission to approve.")
+    return MembershipRepository.update_status(db, membership_id, data.status)

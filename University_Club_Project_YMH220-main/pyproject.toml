@@ -1,0 +1,6 @@
+[tool.pyright]
+include = ["app"]
+exclude = [".venv", "mock_api"]
+venvPath = "."
+venv = ".venv"
+extraPaths = ["."]
