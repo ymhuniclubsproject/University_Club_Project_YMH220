@@ -1,0 +1,5 @@
+C:\Program Files (x86)\Android\AndroidNDK\android-ndk-r23c\prebuilt\windows-x86_64\bin\python.exe
+C:\Program Files (x86)\Android\AndroidNDK\android-ndk-r23c\toolchains\llvm\prebuilt\windows-x86_64\python3\python.exe
+C:\Users\MSI\AppData\Local\Microsoft\WindowsApps\python.exe
+C:\Users\MSI\AppData\Local\Microsoft\WindowsApps\Microsoft.DesktopAppInstaller_8wekyb3d8bbwe\python.exe
+c:\Users\MSI\UniClub\.venv\Scripts\python.exe

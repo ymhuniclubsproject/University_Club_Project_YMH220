@@ -1,0 +1,44 @@
+{
+    "clubs": [
+        {
+            "id": 1,
+            "name": "Cyber Security Club",
+            "description": "Club focused on cyber security and ethical hacking",
+            "members": 120
+        },
+        {
+            "id": 2,
+            "name": "Software Club",
+            "description": "Building the future of the web and AI.",
+            "members": 350
+        }
+    ],
+    "events": [
+        {
+            "id": 1,
+            "name": "Python Workshop",
+            "quota": 150,
+            "date": "2026-04-15",
+            "club_id": 2,
+            "club": "Software Club"
+        },
+        {
+            "id": 2,
+            "name": "CTF Challenge 2026",
+            "quota": 50,
+            "date": "2026-05-10",
+            "club_id": 1,
+            "club": "Cyber Security Club"
+        }
+    ],
+    "points": [
+        {
+            "user_id": 1,
+            "total_points": 450,
+            "history": [
+                {"event_id": 1, "amount": 100, "reason": "Attended Python Workshop"},
+                {"event_id": 2, "amount": 350, "reason": "Won CTF Challenge"}
+            ]
+        }
+    ]
+}

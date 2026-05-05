@@ -1,0 +1,99 @@
+{% extends "app/layout.html" %}
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="font-weight-bold">Event Archive & Ratings</h3>
+        <a href="{% url 'event_add' %}" class="btn btn-maroon shadow-sm">
+            <i class="fas fa-plus mr-2"></i>Add Event
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h5 class="font-weight-bold mb-4 text-maroon"><i class="fas fa-history mr-2"></i>Past Events & Ratings</h5>
+            <div class="row">
+                {% for event in past_events %}
+                <div class="col-lg-4 col-md-6 mb-4">
+                    <div class="card border-0 shadow-sm rounded-lg overflow-hidden h-100 card-hover">
+                        {% if event.image %}
+                        <img src="{{ event.image.url }}" class="card-img-top" style="height:180px; object-fit:cover;">
+                        {% endif %}
+                        <div class="card-body">
+                            <h6 class="font-weight-bold mb-2 text-maroon">{{ event.title }}</h6>
+                            <p class="small text-muted mb-2">{{ event.club.name }} &middot; {{ event.event_date }}</p>
+                            
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="text-warning">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= event.average_rating %}
+                                            <i class="fas fa-star"></i>
+                                        {% else %}
+                                            <i class="far fa-star"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <span class="small text-muted ml-1">({{ event.average_rating }})</span>
+                                </div>
+                                <span class="badge badge-pill px-2 py-1 border text-muted" style="font-size: 10px;">
+                                    {{ event.ratings.count }} reviews
+                                </span>
+                            </div>
+
+                            <div class="d-flex mb-3">
+                                <a href="{% url 'event_detail' event.pk %}" class="btn btn-outline-maroon btn-sm flex-grow-1 mr-2">
+                                    Details
+                                </a>
+                                <button class="btn btn-maroon btn-sm" type="button" data-toggle="collapse" data-target="#rateForm{{ event.id }}">
+                                    <i class="fas fa-star mr-1"></i> Rate
+                                </button>
+                            </div>
+
+                            <!-- Individual Rating Form -->
+                            <div class="collapse mt-3" id="rateForm{{ event.id }}">
+                                <div class="p-3 bg-light rounded border">
+                                    {% if user.is_authenticated %}
+                                    <form method="post">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="event" value="{{ event.id }}">
+                                        <div class="form-group mb-2">
+                                            <label class="small font-weight-bold mb-1">Score (1-5)</label>
+                                            <select name="score" class="form-control form-control-sm">
+                                                <option value="5">5 - Excellent</option>
+                                                <option value="4">4 - Good</option>
+                                                <option value="3">3 - Average</option>
+                                                <option value="2">2 - Poor</option>
+                                                <option value="1">1 - Terrible</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group mb-2">
+                                            <label class="small font-weight-bold mb-1">Comment</label>
+                                            <textarea name="comment" class="form-control form-control-sm" rows="2" placeholder="Optional..."></textarea>
+                                        </div>
+                                        <button type="submit" class="btn btn-maroon btn-sm btn-block">Submit</button>
+                                    </form>
+                                    {% else %}
+                                    <p class="small text-danger mb-0">Please login to rate.</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% empty %}
+                <div class="col-12 text-center py-5">
+                    <p class="text-muted">No past events yet.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .text-maroon { color: #800000 !important; }
+    .border-top-maroon { border-top: 5px solid #800000 !important; }
+    .btn-maroon { background-color: #800000; color: white !important; border: none; }
+    .btn-maroon:hover { background-color: #600000 !important; }
+    .btn-outline-maroon { color: #800000; border: 1px solid #800000; border-radius: 6px; font-weight: bold; transition: 0.3s; }
+    .btn-outline-maroon:hover { background-color: #800000; color: white !important; }
+    .form-control:focus { border-color: #800000; box-shadow: 0 0 0 0.2rem rgba(128,0,0,0.15); }
+</style>
+{% endblock %}
