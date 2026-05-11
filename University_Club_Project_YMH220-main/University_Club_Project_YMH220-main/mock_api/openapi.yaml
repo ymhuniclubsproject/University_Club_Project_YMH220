@@ -1,0 +1,287 @@
+openapi: 3.0.3
+info:
+  title: UniClub API Specification
+  description: API for the UniClub University Club Management System. This spec ensures a seamless API First development integration between frontend and backend teams.
+  version: 1.0.0
+servers:
+  - url: http://127.0.0.1:8080
+    description: Local Mock Server
+  - url: http://127.0.0.1:8000
+    description: Local FastAPI Backend Server (Under Development)
+paths:
+  /api/v1/auth/register:
+    post:
+      summary: Register a new user
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                password:
+                  type: string
+                full_name:
+                  type: string
+              example:
+                email: student@university.edu
+                password: securepassword123
+                full_name: John Doe
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              example:
+                id: 99
+                email: student@university.edu
+                full_name: John Doe
+                role: student
+
+  /api/v1/auth/login:
+    post:
+      summary: Login for access token
+      tags: [Authentication]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+              example:
+                username: student@university.edu
+                password: securepassword123
+      responses:
+        '200':
+          description: Successful login
+          content:
+            application/json:
+              example:
+                access_token: mock-jwt-token-123
+                token_type: bearer
+
+  /api/v1/auth/me:
+    get:
+      summary: Get current authenticated user
+      tags: [Authentication]
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User details
+          content:
+            application/json:
+              example:
+                id: 1
+                email: student@university.edu
+                full_name: John Doe
+                role: student
+
+  /api/v1/clubs:
+    get:
+      summary: List all clubs
+      tags: [Clubs]
+      responses:
+        '200':
+          description: A list of clubs
+          content:
+            application/json:
+              example:
+                - id: 1
+                  name: Cyber Security Club
+                  description: Club focused on cyber security and ethical hacking
+                  members: 120
+    post:
+      summary: Create a new club
+      tags: [Clubs]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: Debate Club
+              description: A club for debating various topics
+              members: 0
+      responses:
+        '201':
+          description: Created
+
+  /api/v1/clubs/{club_id}:
+    get:
+      summary: Get details of a specific club
+      tags: [Clubs]
+      parameters:
+        - in: path
+          name: club_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Club details
+    put:
+      summary: Update a club
+      tags: [Clubs]
+      parameters:
+        - in: path
+          name: club_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: Cyber Security Club
+              members: 125
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Delete a club
+      tags: [Clubs]
+      parameters:
+        - in: path
+          name: club_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Deleted successfully
+
+  /api/v1/events:
+    get:
+      summary: List all events
+      tags: [Events]
+      responses:
+        '200':
+          description: A list of events
+          content:
+            application/json:
+              example:
+                - id: 1
+                  name: Python Workshop
+                  quota: 150
+                  date: 2026-04-15
+                  club_id: 2
+                  club: "Software Club"
+    post:
+      summary: Create an event
+      tags: [Events]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              name: Python Workshop
+              quota: 150
+              date: 2026-04-15
+              club_id: 2
+              club: "Software Club"
+      responses:
+        '201':
+          description: Event created
+
+  /api/v1/events/{event_id}:
+    get:
+      summary: Get details of an event
+      tags: [Events]
+      parameters:
+        - in: path
+          name: event_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Event details
+    put:
+      summary: Update event
+      tags: [Events]
+      parameters:
+        - in: path
+          name: event_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              quota: 200
+      responses:
+        '200':
+          description: Updated
+    delete:
+      summary: Delete an event
+      tags: [Events]
+      parameters:
+        - in: path
+          name: event_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Deleted
+
+  /api/v1/users/{user_id}/points:
+    get:
+      summary: Get user points
+      tags: [User Points]
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: User points and history
+          content:
+            application/json:
+              example:
+                user_id: 1
+                total_points: 450
+                history:
+                  - event_id: 1
+                    amount: 100
+                    reason: Attended Python Workshop
+    post:
+      summary: Award points to the user
+      tags: [User Points]
+      parameters:
+        - in: path
+          name: user_id
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            example:
+              event_id: 1
+              amount: 100
+              reason: Attended Python Workshop
+      responses:
+        '201':
+          description: Points awarded
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

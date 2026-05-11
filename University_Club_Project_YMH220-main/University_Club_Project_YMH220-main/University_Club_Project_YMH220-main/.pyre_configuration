@@ -1,0 +1,5 @@
+{
+  "source_directories": ["app", "mock_api"],
+  "search_path": [".", ".venv/Lib/site-packages"],
+  "python_version": "3.13"
+}

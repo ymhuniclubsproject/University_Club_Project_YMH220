@@ -1,0 +1,97 @@
+{% extends "app/layout.html" %}
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="row" style="height:85vh;">
+        <!-- SIDEBAR -->
+        <div class="col-md-2 border-right pr-4">
+            <div class="text-center mb-4">
+                <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center text-white shadow" style="width:60px;height:60px;background-color:#800000;">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <h6 class="mt-2 font-weight-bold small text-uppercase">Club Messages</h6>
+            </div>
+            <div class="list-group sidebar-menu border-0 small">
+                {% for club in clubs %}
+                <a href="?club={{ club.pk }}" class="list-group-item text-dark border-bottom {% if selected_club.pk == club.pk %}active-item{% endif %}">
+                    <i class="fas fa-university mr-2 text-muted"></i>{{ club.name }}
+                    {% with unread=club.received_messages.count %}
+                        {% if unread > 0 %}<span class="badge badge-danger float-right">{{ unread }}</span>{% endif %}
+                    {% endwith %}
+                </a>
+                {% empty %}
+                <p class="text-muted small">No clubs yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- CHAT -->
+        <div class="col-md-10 d-flex flex-column p-0">
+            {% if selected_club %}
+            <div class="p-3 bg-white border-bottom d-flex justify-content-between align-items-center shadow-sm">
+                <div class="d-flex align-items-center">
+                    <a href="{% url 'club_detail' selected_club.pk %}" class="btn btn-sm btn-outline-secondary mr-3 rounded-circle">
+                        <i class="fas fa-arrow-left"></i>
+                    </a>
+                    <span class="font-weight-bold text-maroon">
+                        <i class="fas fa-comments mr-2"></i>Chat: {{ selected_club.name }}
+                    </span>
+                </div>
+                <span class="badge badge-pill badge-light border text-muted small">Online</span>
+            </div>
+
+            <div id="chatWindow" class="flex-grow-1 p-4 overflow-auto d-flex flex-column" style="background-color:#f8f9fa; height:60vh;">
+                {% for msg in chat_messages %}
+                    {% if msg.sender_name == request.user.username %}
+                    <div class="msg-sent mb-3 shadow-sm align-self-end">
+                        <strong class="d-block small text-white-50">{{ msg.sender_name }}</strong>
+                        {{ msg.content }}
+                        <div class="text-right" style="font-size:10px; opacity:0.7;">{{ msg.sent_at|date:"H:i" }}</div>
+                    </div>
+                    {% else %}
+                    <div class="msg-received mb-3 shadow-sm">
+                        <strong class="d-block small text-muted">{{ msg.sender_name }}</strong>
+                        {{ msg.content }}
+                        <div style="font-size:10px; opacity:0.7;">{{ msg.sent_at|date:"H:i" }}</div>
+                    </div>
+                    {% endif %}
+                {% empty %}
+                <div class="text-center text-muted mt-5">No messages yet. Send the first message!</div>
+                {% endfor %}
+            </div>
+
+            <div class="p-3 bg-white border-top">
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="receiver_club" value="{{ selected_club.pk }}">
+                    <div class="input-group shadow-sm border rounded-pill overflow-hidden bg-white px-2">
+                        <input type="text" name="content" id="msgContent" class="form-control border-0 bg-transparent" placeholder="Type your message...">
+                        <div class="input-group-append">
+                            <button type="submit" class="btn font-weight-bold px-4" style="color:#800000;">SEND</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            {% else %}
+            <div class="d-flex align-items-center justify-content-center h-100 text-muted text-center p-5">
+                <div>
+                    <i class="fas fa-comments fa-4x mb-3" style="color:#ddd;"></i>
+                    <h5>Select a Club to Start Chatting</h5>
+                    <p class="small">Choose a club from the left panel to view messages.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<style>
+    .msg-received { background-color:#e9ecef; padding:12px 18px; border-radius:15px 15px 15px 0; max-width:70%; font-size:0.9rem; }
+    .msg-sent { background-color:#800000; color:white; padding:12px 18px; border-radius:15px 15px 0 15px; max-width:70%; font-size:0.9rem; }
+    .text-maroon { color: #800000 !important; }
+    .sidebar-menu .active-item { background-color: #fceceb !important; color: #800000 !important; border-left: 4px solid #800000 !important; font-weight: bold; }
+    #chatWindow { scroll-behavior: smooth; }
+</style>
+<script>
+    var chatWindow = document.getElementById('chatWindow');
+    if (chatWindow) chatWindow.scrollTop = chatWindow.scrollHeight;
+</script>
+{% endblock %}

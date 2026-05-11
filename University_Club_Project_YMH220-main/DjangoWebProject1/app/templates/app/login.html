@@ -1,0 +1,57 @@
+{% extends "app/layout.html" %}
+{% block content %}
+<div class="container" style="max-width:500px;">
+    <div class="card border-0 shadow rounded-lg overflow-hidden mt-5">
+        <div class="card-header py-4 text-center" style="background-color:#800000;">
+            <h4 class="text-white font-weight-bold mb-0">Login to UNICLUBS</h4>
+        </div>
+        <div class="card-body p-5">
+            <form method="post">
+                {% csrf_token %}
+                {% for field in form %}
+                <div class="form-group mb-4">
+                    <label class="font-weight-bold small text-uppercase text-muted">{{ field.label }}</label>
+                    <div class="input-group">
+                        {{ field }}
+                        {% if field.name == 'password' %}
+                        <div class="input-group-append">
+                            <span class="input-group-text bg-white border-left-0" style="cursor:pointer;" onclick="togglePassword('id_password', this)">
+                                <i class="fas fa-eye text-muted"></i>
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if field.errors %}
+                        <div class="text-danger small mt-1">{{ field.errors|join:", " }}</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <button type="submit" class="btn btn-maroon btn-block py-2 shadow-sm font-weight-bold">
+                    <i class="fas fa-sign-in-alt mr-2"></i>Login
+                </button>
+            </form>
+            <script>
+                function togglePassword(id, el) {
+                    const input = document.getElementById(id);
+                    const icon = el.querySelector('i');
+                    if (input.type === 'password') {
+                        input.type = 'text';
+                        icon.classList.replace('fa-eye', 'fa-eye-slash');
+                    } else {
+                        input.type = 'password';
+                        icon.classList.replace('fa-eye-slash', 'fa-eye');
+                    }
+                }
+            </script>
+            <div class="text-center mt-4">
+                <p class="small text-muted">Don't have an account? <a href="{% url 'register' %}" class="text-maroon font-weight-bold">Register here</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .btn-maroon { background-color: #800000; color: white !important; border: none; border-radius: 8px; transition: 0.3s; }
+    .btn-maroon:hover { background-color: #600000; }
+    .text-maroon { color: #800000 !important; }
+</style>
+{% endblock %}

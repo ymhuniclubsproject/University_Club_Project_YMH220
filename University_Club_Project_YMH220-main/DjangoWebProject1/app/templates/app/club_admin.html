@@ -1,0 +1,261 @@
+{% extends "app/layout.html" %}
+{% block content %}
+<div class="container-fluid px-4">
+    <div class="row">
+        <!-- SIDEBAR -->
+        <div class="col-md-2 border-right pr-4" style="min-height:80vh;">
+            <div class="text-center mb-4">
+                <div class="rounded-circle mx-auto d-flex align-items-center justify-content-center text-white shadow" style="width:65px;height:65px;background-color:#800000;">
+                    <i class="fas fa-desktop fa-lg"></i>
+                </div>
+                <h6 class="mt-2 font-weight-bold">Club Management</h6>
+                <span class="badge badge-pill badge-light border text-maroon small">Admin Panel</span>
+            </div>
+            <div class="list-group sidebar-menu border-0 small">
+                <a href="{% url 'club_admin' %}" class="list-group-item active-item">
+                    <i class="fas fa-home mr-2"></i>Overview
+                </a>
+                <a href="{% url 'event_add' %}" class="list-group-item text-dark border-bottom">
+                    <i class="fas fa-calendar-plus mr-2 text-muted"></i>Add Event
+                </a>
+                {% if user.username == 'UNICLUBSADMIN' %}
+                <a href="{% url 'club_add' %}" class="list-group-item text-dark border-bottom">
+                    <i class="fas fa-plus-circle mr-2 text-muted"></i>Add Club
+                </a>
+                {% endif %}
+                <a href="{% url 'membership_requests' %}" class="list-group-item text-dark border-bottom">
+                    <i class="fas fa-users mr-2 text-muted"></i>Member Requests
+                    {% if pending_requests > 0 %}<span class="badge badge-danger float-right">{{ pending_requests }}</span>{% endif %}
+                </a>
+                <a href="{% url 'messages' %}" class="list-group-item text-dark border-bottom">
+                    <i class="fas fa-envelope mr-2 text-muted"></i>Messages
+                </a>
+                <a href="{% url 'announcement_add' %}" class="list-group-item text-dark border-bottom">
+                    <i class="fas fa-bullhorn mr-2 text-muted"></i>New Announcement
+                </a>
+                <a href="{% url 'home' %}" class="list-group-item text-danger mt-4 font-weight-bold border-0">
+                    <i class="fas fa-sign-out-alt mr-2"></i>Exit
+                </a>
+            </div>
+        </div>
+
+        <!-- MAIN CONTENT -->
+        <div class="col-md-10">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h4 class="font-weight-bold">Club Management Overview</h4>
+                <a href="{% url 'event_add' %}" class="btn btn-maroon shadow-sm">
+                    <i class="fas fa-plus mr-2"></i>Create New Event
+                </a>
+            </div>
+
+            <!-- Stats -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 text-center border-bottom-maroon">
+                        <small class="text-muted font-weight-bold">TOTAL MEMBERS</small>
+                        <h2 class="font-weight-bold text-maroon mb-0">{{ total_members }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 text-center border-bottom-maroon">
+                        <small class="text-muted font-weight-bold">ACTIVE EVENTS</small>
+                        <h2 class="font-weight-bold text-maroon mb-0">{{ active_events }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 text-center border-bottom-maroon">
+                        <small class="text-muted font-weight-bold">PENDING REQUESTS</small>
+                        <h2 class="font-weight-bold text-warning mb-0">{{ pending_requests }}</h2>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card border-0 shadow-sm rounded-lg p-3 text-center border-bottom-maroon">
+                        <small class="text-muted font-weight-bold">TOTAL CLUBS</small>
+                        <h2 class="font-weight-bold text-success mb-0">{{ clubs|length }}</h2>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Membership Requests -->
+            <div class="card border-0 shadow-sm rounded-lg overflow-hidden mb-4">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="font-weight-bold mb-0 text-maroon"><i class="fas fa-user-plus mr-2"></i>Pending Membership Requests</h6>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 small">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>STUDENT</th><th>DEPARTMENT</th><th>CLUB</th><th>DATE</th><th class="text-center">ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for req in membership_requests %}
+                            <tr>
+                                <td class="font-weight-bold">{{ req.student.full_name }}</td>
+                                <td>{{ req.student.department }}</td>
+                                <td>{{ req.club.name }}</td>
+                                <td>{{ req.applied_at|date:"d.m.Y" }}</td>
+                                <td class="text-center">
+                                    <a href="{% url 'membership_approve' req.pk %}" class="btn btn-sm btn-success px-3 py-1 mr-1">Approve</a>
+                                    <a href="{% url 'membership_reject' req.pk %}" class="btn btn-sm btn-outline-danger px-3 py-1">Reject</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-3">No pending requests.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Pending Core Team Applications -->
+            <div class="card border-0 shadow-sm rounded-lg overflow-hidden mb-4 border-primary">
+                <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="font-weight-bold mb-0"><i class="fas fa-star mr-2"></i>New Core Team Applications</h6>
+                    <span class="badge badge-light text-primary">{{ core_team_apps|length }} Pending</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 small">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>STUDENT</th><th>CLUB</th><th>POSITION (DEPT)</th><th>APPLIED AT</th><th class="text-center">ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for app in core_team_apps %}
+                            <tr>
+                                <td class="font-weight-bold">{{ app.student.full_name }}</td>
+                                <td>{{ app.club.name }}</td>
+                                <td><span class="badge badge-info px-2 py-1">{{ app.department }}</span></td>
+                                <td>{{ app.applied_at|date:"d.m.Y H:i" }}</td>
+                                <td class="text-center">
+                                    <a href="{% url 'core_team_approve' app.pk %}" class="btn btn-sm btn-success shadow-sm px-3">Hire</a>
+                                    <a href="{% url 'core_team_reject' app.pk %}" class="btn btn-sm btn-danger shadow-sm px-3">Decline</a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">No pending core team applications.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Approved Members Management -->
+            <div class="card border-0 shadow-sm rounded-lg overflow-hidden mb-4 border-success">
+                <div class="card-header bg-success text-white py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="font-weight-bold mb-0"><i class="fas fa-user-check mr-2"></i>Approved Club Members</h6>
+                    <span class="badge badge-light text-success">{{ approved_members|length }} Members</span>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 small">
+                        <thead class="bg-light">
+                            <tr>
+                                <th>STUDENT</th><th>DEPARTMENT</th><th>FACULTY</th><th>JOINED DATE</th><th class="text-center">ACTIONS</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for mem in approved_members %}
+                            <tr>
+                                <td class="font-weight-bold">{{ mem.student.full_name }}</td>
+                                <td>{{ mem.student.department }}</td>
+                                <td>{{ mem.student.faculty }}</td>
+                                <td>{{ mem.applied_at|date:"d.m.Y" }}</td>
+                                <td class="text-center">
+                                    <a href="{% url 'member_remove' mem.pk %}" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this member?')">
+                                        <i class="fas fa-user-minus mr-1"></i>Remove
+                                    </a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-4">No approved members yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Events Table -->
+            <div class="card border-0 shadow-sm rounded-lg overflow-hidden mb-4">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="font-weight-bold mb-0 text-maroon"><i class="fas fa-calendar mr-2"></i>All Events</h6>
+                    <a href="{% url 'event_add' %}" class="btn btn-sm btn-maroon">+ Add Event</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 small">
+                        <thead class="bg-light">
+                            <tr><th>TITLE</th><th>CLUB</th><th>DATE</th><th>STATUS</th><th>APPROVED</th><th class="text-center">ACTIONS</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for event in events %}
+                            <tr>
+                                <td class="font-weight-bold">{{ event.title }}</td>
+                                <td>{{ event.club.name }}</td>
+                                <td>{{ event.event_date }}</td>
+                                <td><span class="badge badge-{{ event.status|yesno:'success,warning,secondary' }}">{{ event.get_status_display }}</span></td>
+                                <td>
+                                    {% if event.is_approved %}
+                                        <span class="badge badge-success">Yes</span>
+                                    {% else %}
+                                        <span class="badge badge-warning">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-center">
+                                    <a href="{% url 'event_detail' event.pk %}" class="btn btn-sm btn-outline-dark px-2 py-1 mr-1" title="View"><i class="fas fa-eye"></i></a>
+                                    <a href="{% url 'event_edit' event.pk %}" class="btn btn-sm btn-outline-primary px-2 py-1 mr-1" title="Edit"><i class="fas fa-edit"></i></a>
+                                    <a href="{% url 'event_delete' event.pk %}" class="btn btn-sm btn-outline-danger px-2 py-1" title="Delete"><i class="fas fa-trash"></i></a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6" class="text-center text-muted py-3">No events yet. <a href="{% url 'event_add' %}">Add first event</a>.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Clubs Table -->
+            <div class="card border-0 shadow-sm rounded-lg overflow-hidden">
+                <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                    <h6 class="font-weight-bold mb-0 text-maroon"><i class="fas fa-university mr-2"></i>{% if user.managed_club %}My Club Info{% else %}All Clubs{% endif %}</h6>
+                    {% if user.username == 'UNICLUBSADMIN' %}
+                    <a href="{% url 'club_add' %}" class="btn btn-sm btn-maroon">+ Add Club</a>
+                    {% endif %}
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 small">
+                        <thead class="bg-light">
+                            <tr><th>NAME</th><th>CATEGORY</th><th>APPROVED</th><th>ACTIVE</th><th class="text-center">ACTIONS</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for club in clubs %}
+                            <tr>
+                                <td class="font-weight-bold">{{ club.name }}</td>
+                                <td>{{ club.category }}</td>
+                                <td>{% if club.is_approved %}<span class="badge badge-success">Yes</span>{% else %}<span class="badge badge-warning">Pending</span>{% endif %}</td>
+                                <td>{% if club.is_active %}<span class="badge badge-success">Active</span>{% else %}<span class="badge badge-secondary">Inactive</span>{% endif %}</td>
+                                <td class="text-center">
+                                    <a href="{% url 'club_info' club.pk %}" class="btn btn-sm btn-outline-primary px-2 py-1 mr-1" title="Edit"><i class="fas fa-edit"></i></a>
+                                    {% if user.username == 'UNICLUBSADMIN' %}
+                                    <a href="{% url 'club_delete' club.pk %}" class="btn btn-sm btn-outline-danger px-2 py-1" title="Delete"><i class="fas fa-trash"></i></a>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="5" class="text-center text-muted py-3">No clubs yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .text-maroon { color: #800000 !important; }
+    .btn-maroon { background-color: #800000; color: white !important; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; }
+    .btn-maroon:hover { background-color: #600000; transform: translateY(-1px); }
+    .border-bottom-maroon { border-bottom: 4px solid #800000 !important; }
+    .sidebar-menu .active-item { background-color: #fceceb !important; color: #800000 !important; border-left: 4px solid #800000 !important; font-weight: bold; }
+</style>
+{% endblock %}
